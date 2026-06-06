@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador Maestro de Secuenciación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+            background: radial-gradient(circle at top, #0f172a 0%, #020617 80%);
+        }
+        input::-webkit-inner-spin-button,
+        input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: 0 12px 34px rgba(2, 6, 23, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        .best-value {
+            color: #34d399; /* Emerald 400 */
+            font-weight: 800;
+        }
+        .pill {
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 9999px;
+            padding: 0.25rem 0.75rem;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto space-y-8">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-slate-700 pb-6 gap-4">
+            <div>
+                <span class="text-sm uppercase tracking-[0.18em] text-slate-300 font-bold">Planificación de producción</span>
+                <h1 class="text-4xl font-extrabold text-white tracking-tight mt-2">Comparador de Reglas de Secuenciación</h1>
+                <p class="text-slate-200 mt-2 text-lg">Compara rápidamente FIFO, SPT, EDD y LPT usando métricas clave.</p>
+            </div>
+            <div class="card px-6 py-4 rounded-xl border-slate-600">
+                <span class="text-sm text-slate-300 uppercase font-bold block tracking-wide">Tiempo total de proceso</span>
+                <span class="text-3xl font-mono font-extrabold text-emerald-400" id="total-time">28</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            
+            <div class="lg:col-span-4">
+                <div class="card p-6 rounded-2xl h-full flex flex-col">
+                    <h3 class="text-xl font-bold mb-2 flex items-center gap-2 text-white">
+                        <span class="w-2 h-7 bg-blue-400 rounded-full"></span> Configuración de trabajos
+                    </h3>
+                    <p class="text-base text-slate-300 mb-6">Edita duración y fecha de entrega de cada trabajo.</p>
+                    
+                    <div class="grid grid-cols-4 gap-2 text-sm text-slate-200 font-bold uppercase tracking-wide mb-3 px-1">
+                        <span>Job</span>
+                        <span class="text-center">T. (días)</span>
+                        <span class="text-center">Ent. (días)</span>
+                        <span class="text-center">Color</span>
+                    </div>
+                    
+                    <div class="space-y-3" id="job-inputs">
+                        </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8">
+                <div class="card p-6 rounded-2xl h-full flex flex-col">
+                    <h3 class="text-xl font-bold mb-4 flex items-center gap-2 text-white">
+                        <span class="w-2 h-7 bg-emerald-400 rounded-full"></span> Métricas Comparativas
+                    </h3>
+                    
+                    <div class="rounded-xl overflow-hidden border border-slate-600 mb-6 flex-grow">
+                        <table class="w-full text-base text-center h-full">
+                            <thead class="bg-slate-800 text-slate-100 uppercase text-sm font-bold tracking-wide">
+                                <tr>
+                                    <th class="px-4 py-4 text-left">Regla</th>
+                                    <th class="px-4 py-4">T. Medio (Días)</th>
+                                    <th class="px-4 py-4">Utilización (%)</th>
+                                    <th class="px-4 py-4">WIP (Uds)</th>
+                                    <th class="px-4 py-4">Retraso Medio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="comparison-body" class="divide-y divide-slate-700 bg-slate-900/50">
+                                </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 text-sm font-semibold text-slate-200 mt-auto pt-2">
+                        <span class="pill">Mejor T. Medio = menor</span>
+                        <span class="pill">Mejor Utilización = mayor</span>
+                        <span class="pill">Mejor WIP = menor</span>
+                        <span class="pill">Mejor Retraso = menor</span>
+                    </div>
+                </div>
+            </div>
+
+        </div> <div class="pt-6 border-t border-slate-700/80">
+            <h3 class="text-2xl font-bold mb-6 text-white tracking-tight">Secuencias resultantes (Gantt)</h3>
+            <div class="flex flex-col gap-5" id="gantt-previews">
+                </div>
+        </div>
+
+    </div>
+
+    <script>
+        let jobs = [
+            { id: 'A', t: 6, d: 8, color: 'bg-blue-500' },
+            { id: 'B', t: 2, d: 6, color: 'bg-emerald-500' },
+            { id: 'C', t: 8, d: 18, color: 'bg-amber-500' },
+            { id: 'D', t: 3, d: 15, color: 'bg-rose-500' },
+            { id: 'E', t: 9, d: 23, color: 'bg-purple-500' }
+        ];
+
+        function calculateRuleMetrics(ruleName, sortedJobs) {
+            let currentTime = 0;
+            let totalFlow = 0;
+            let totalTardiness = 0;
+            const totalProcess = jobs.reduce((s, j) => s + j.t, 0);
+
+            const results = sortedJobs.map(j => {
+                currentTime += j.t;
+                const tardiness = Math.max(0, currentTime - j.d);
+                totalFlow += currentTime;
+                totalTardiness += tardiness;
+                return { ...j, flow: currentTime, tardiness };
+            });
+
+            return {
+                name: ruleName,
+                meanFlow: (totalFlow / jobs.length).toFixed(2),
+                utilization: ((totalProcess / totalFlow) * 100).toFixed(2),
+                wip: (totalFlow / totalProcess).toFixed(2),
+                meanTardiness: (totalTardiness / jobs.length).toFixed(2),
+                sequence: results
+            };
+        }
+
+        function render() {
+            const totalProcess = jobs.reduce((s, j) => s + j.t, 0);
+            document.getElementById('total-time').innerText = totalProcess;
+
+            // 1. Render Inputs
+            const inputContainer = document.getElementById('job-inputs');
+            inputContainer.innerHTML = '';
+            jobs.forEach((j, i) => {
+                inputContainer.innerHTML += `
+                    <div class="grid grid-cols-4 gap-2 items-center bg-slate-800 p-3 rounded-lg border border-slate-600 transition-colors hover:bg-slate-700/80">
+                        <span class="font-bold text-base text-slate-100 pl-2">${j.id}</span>
+                        <input type="number" min="0" value="${j.t}" onchange="updateJob(${i}, 't', this.value)" class="bg-slate-900 border border-slate-500 rounded-md p-2 text-center text-base text-white font-bold focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50 outline-none transition" title="Tiempo de proceso">
+                        <input type="number" min="0" value="${j.d}" onchange="updateJob(${i}, 'd', this.value)" class="bg-slate-900 border border-slate-500 rounded-md p-2 text-center text-base text-white font-bold focus:border-blue-400 focus:ring-2 focus:ring-blue-400/50 outline-none transition" title="Fecha de entrega">
+                        <div class="w-5 h-5 rounded-full ${j.color} mx-auto ring-2 ring-slate-400"></div>
+                    </div>
+                `;
+            });
+
+            // 2. Calcular las 4 reglas
+            const fifo = calculateRuleMetrics('FIFO', [...jobs]);
+            const spt = calculateRuleMetrics('SPT', [...jobs].sort((a,b) => a.t - b.t));
+            const edd = calculateRuleMetrics('EDD', [...jobs].sort((a,b) => a.d - b.d));
+            const lpt = calculateRuleMetrics('LPT', [...jobs].sort((a,b) => b.t - a.t));
+            const allRules = [fifo, spt, edd, lpt];
+
+            // 3. Determinar ganadores por métrica
+            const bestFlow = Math.min(...allRules.map(r => r.meanFlow));
+            const bestUtil = Math.max(...allRules.map(r => r.utilization));
+            const bestWip = Math.min(...allRules.map(r => r.wip));
+            const bestTardy = Math.min(...allRules.map(r => r.meanTardiness));
+
+            // 4. Render Tabla Comparativa
+            const tbody = document.getElementById('comparison-body');
+            tbody.innerHTML = '';
+            allRules.forEach(r => {
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-800 transition-colors">
+                        <td class="px-4 py-5 text-left font-extrabold text-blue-300 text-lg">${r.name}</td>
+                        <td class="px-4 py-5 font-medium text-base ${r.meanFlow == bestFlow ? 'best-value' : 'text-slate-200'}">${r.meanFlow}</td>
+                        <td class="px-4 py-5 font-medium text-base ${r.utilization == bestUtil ? 'best-value' : 'text-slate-200'}">${r.utilization}%</td>
+                        <td class="px-4 py-5 font-medium text-base ${r.wip == bestWip ? 'best-value' : 'text-slate-200'}">${r.wip}</td>
+                        <td class="px-4 py-5 font-medium text-base ${r.meanTardiness == bestTardy ? 'best-value' : 'text-slate-200'}">${r.meanTardiness}</td>
+                    </tr>
+                `;
+            });
+
+            // 5. Render Gantts de Previsualización (Ahora en 1 columna de ancho completo)
+            const ganttContainer = document.getElementById('gantt-previews');
+            ganttContainer.innerHTML = '';
+            allRules.forEach(r => {
+                let blocks = r.sequence.map(j => `
+                    <div class="${j.color} h-full border-r border-slate-900 flex items-center justify-center text-sm font-extrabold text-white overflow-hidden shadow-inner" style="width: ${(j.t/totalProcess)*100}%" title="Job ${j.id}">
+                        ${j.id}
+                    </div>
+                `).join('');
+                
+                // Contenedor modificado para aprovechar mejor el ancho completo
+                ganttContainer.innerHTML += `
+                    <div class="card p-5 rounded-xl border-slate-600 flex flex-col justify-between">
+                        <div class="flex justify-between text-base font-bold text-slate-200 mb-3 uppercase tracking-wide">
+                            <span class="text-blue-300">${r.name}</span>
+                            <span>Retraso medio: <span class="text-white">${r.meanTardiness}</span></span>
+                        </div>
+                        <div class="h-12 w-full bg-slate-900 rounded-lg flex overflow-hidden border border-slate-500 shadow-sm">${blocks}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function updateJob(index, field, val) {
+            jobs[index][field] = parseInt(val) || 0;
+            render();
+        }
+
+        render();
+    </script>
+</body>
+</html>

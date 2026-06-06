@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>(Doble Alisado Exponencial) — Previsión de Demanda</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --bg0:#070b14;
+      --bg1:#0b1222;
+      --card:#0f1930;
+      --card2:#0b152a;
+      --text:#e9eefb;
+      --muted:#9bb0d3;
+      --line:rgba(255,255,255,.08);
+      --accent:#4aa3ff;
+      --accent2:#7c5cff;
+      --good:#4be3a5;
+      --warn:#ffcc66;
+      --bad:#ff5c7a;
+      --shadow:0 18px 55px rgba(0,0,0,.45);
+      --radius:16px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(74,163,255,.18), transparent 55%),
+        radial-gradient(900px 600px at 85% 20%, rgba(124,92,255,.16), transparent 50%),
+        radial-gradient(1000px 700px at 35% 90%, rgba(75,227,165,.12), transparent 55%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      letter-spacing:.2px;
+    }
+    .wrap{
+      max-width:1180px;
+      margin:24px auto 40px;
+      padding:0 18px;
+    }
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:16px;
+    }
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .title h1{
+      font-size:18px;
+      font-weight:700;
+      margin:0;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      opacity:.95;
+    }
+    .title .sub{
+      font-size:12px;
+      color:var(--muted);
+      margin:0;
+    }
+    .badge{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.03);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background:linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow:0 0 0 4px rgba(74,163,255,.12);
+    }
+    .badge span{
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 380px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      padding:14px 16px;
+      border-bottom:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.01));
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+    .card .hd .h{
+      font-size:13px;
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      color:rgba(233,238,251,.9);
+      margin:0;
+      font-weight:700;
+    }
+    .card .bd{padding:14px 16px}
+    .kpis{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .kpi{
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,25,48,.85), rgba(11,21,42,.85));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    .kpi .label{
+      font-size:11px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.8px;
+      margin:0 0 6px;
+    }
+    .kpi .value{
+      font-family:var(--mono);
+      font-size:18px;
+      margin:0;
+      font-weight:700;
+      letter-spacing:.2px;
+    }
+    .kpi .hint{
+      margin-top:6px;
+      font-size:11px;
+      color:rgba(155,176,211,.9);
+    }
+
+    .row{display:flex; flex-direction:column; gap:8px; margin:12px 0}
+    .row .top{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .row .name{
+      font-size:12px;
+      color:rgba(233,238,251,.88);
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      font-weight:700;
+    }
+    .pill{
+      font-family:var(--mono);
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:rgba(233,238,251,.92);
+      background:rgba(255,255,255,.03);
+      min-width:84px;
+      text-align:center;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+      cursor:pointer;
+    }
+    .btns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    button{
+      appearance:none;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(74,163,255,.18), rgba(74,163,255,.08));
+      color:rgba(233,238,251,.96);
+      border-radius:14px;
+      padding:10px 12px;
+      font-weight:700;
+      letter-spacing:.3px;
+      cursor:pointer;
+      transition:transform .08s ease, filter .15s ease, background .15s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+    }
+    button:hover{filter:brightness(1.08)}
+    button:active{transform:translateY(1px)}
+    button.secondary{
+      background:linear-gradient(180deg, rgba(124,92,255,.18), rgba(124,92,255,.08));
+    }
+    button.ghost{
+      background:rgba(255,255,255,.03);
+    }
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+      filter:saturate(.8);
+    }
+
+    .dataBox{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:14px;
+      padding-top:14px;
+      border-top:1px dashed rgba(255,255,255,.14);
+    }
+    textarea{
+      width:100%;
+      min-height:92px;
+      resize:vertical;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(7,11,20,.55);
+      color:rgba(233,238,251,.95);
+      padding:10px 12px;
+      font-family:var(--mono);
+      font-size:12px;
+      line-height:1.45;
+      outline:none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+    }
+    textarea:focus{border-color: rgba(74,163,255,.45)}
+    .note{
+      font-size:11px;
+      color:rgba(155,176,211,.92);
+      margin:0;
+    }
+    .err{
+      font-size:12px;
+      color:rgba(255,92,122,.95);
+      background:rgba(255,92,122,.08);
+      border:1px solid rgba(255,92,122,.25);
+      padding:8px 10px;
+      border-radius:12px;
+      display:none;
+    }
+
+    .chartCard{
+      padding:0;
+    }
+    .chartWrap{
+      padding:12px 16px 16px;
+    }
+    canvas{display:block; width:100% !important; height:460px !important;}
+    @media (max-width: 980px){
+      canvas{height:380px !important;}
+    }
+
+    .mini{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:6px;
+      color:rgba(155,176,211,.9);
+      font-size:11px;
+    }
+    .mini code{
+      font-family:var(--mono);
+      color:rgba(233,238,251,.92);
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      padding:2px 6px;
+      border-radius:8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Previsión de Demanda — (Doble Alisado Exponencial)</h1>
+        <p class="sub">Dashboard corporativo · Ajuste de Alfa/Beta en tiempo real · Optimización por MSE</p>
+      </div>
+      <div class="badge" title="Motor de cálculo en el navegador">
+        <div class="dot"></div>
+        <span>Simulación local · Chart.js</span>
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div class="hd">
+          <p class="h">Controles & KPIs</p>
+          <div class="pill" id="nBadge">N=—</div>
+        </div>
+        <div class="bd">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="label">VME</div>
+              <p class="value" id="madVal">—</p>
+              <div class="hint">\(\frac{1}{m}\sum|A_t - F_t|\)</div>
+            </div>
+            <div class="kpi">
+              <div class="label">ECM</div>
+              <p class="value" id="mseVal">—</p>
+              <div class="hint">\(\frac{1}{m}\sum(A_t - F_t)^2\)</div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="top">
+              <div class="name">Alfa (Nivel)</div>
+              <div class="pill" id="alphaPill">0.30</div>
+            </div>
+            <input id="alpha" type="range" min="0" max="1" step="0.01" value="0.30" />
+          </div>
+
+          <div class="row">
+            <div class="top">
+              <div class="name">Beta (Tendencia)</div>
+              <div class="pill" id="betaPill">0.20</div>
+            </div>
+            <input id="beta" type="range" min="0" max="1" step="0.01" value="0.20" />
+          </div>
+
+          <div class="btns">
+            <select id="optTarget" style="background: rgba(255,255,255,.05); color: white; border: 1px solid var(--line); border-radius: 12px; padding: 10px; font-weight: 700;">
+              <option value="ECM">Minimizar ECM</option>
+              <option value="VME">Minimizar VME</option>
+            </select>
+            <button class="secondary" id="btnOpt">Calcular Óptimos</button>
+            <button class="ghost" id="btnReset" title="Restaurar alfa/beta por defecto">Reset</button>
+          </div>
+
+          <div class="dataBox">
+            <div class="top" style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+              <div class="name">Serie temporal (coma-separada)</div>
+              <div class="pill" id="statusPill">Listo</div>
+            </div>
+            <textarea id="dataInput" spellcheck="false">45, 48, 47, 50, 52, 49, 53, 55, 54, 58, 56, 60</textarea>
+            <div class="btns" style="margin-top:0">
+              <button id="btnData">Actualizar Datos</button>
+              <button class="ghost" id="btnDemo" title="Restaurar datos de ejemplo">Datos Demo</button>
+            </div>
+            <div class="err" id="errBox"></div>
+            <p class="note">
+              Consejo: puedes pegar valores con espacios y saltos de línea. Se aceptan decimales.
+            </p>
+            <div class="mini">
+              <span>Modelo:</span> <code>Holt</code>
+              <span>Rango:</span> <code>α,β ∈ [0,1]</code>
+              <span>Optimización:</span> <code>Grid 0.01</code>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card chartCard">
+        <div class="hd">
+          <p class="h">Demanda Real vs Previsión</p>
+          <div class="pill" id="abPill">α=0.30 · β=0.20</div>
+        </div>
+        <div class="chartWrap">
+          <canvas id="chart"></canvas>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_SERIES = "45, 48, 47, 50, 52, 49, 53, 55, 54, 58, 56, 60";
+    const DEFAULT_ALPHA = 0.30;
+    const DEFAULT_BETA  = 0.20;
+
+    const els = {
+      alpha: document.getElementById("alpha"),
+      beta: document.getElementById("beta"),
+      alphaPill: document.getElementById("alphaPill"),
+      betaPill: document.getElementById("betaPill"),
+      abPill: document.getElementById("abPill"),
+      nBadge: document.getElementById("nBadge"),
+      madVal: document.getElementById("madVal"),
+      mseVal: document.getElementById("mseVal"),
+      btnOpt: document.getElementById("btnOpt"),
+      btnReset: document.getElementById("btnReset"),
+      dataInput: document.getElementById("dataInput"),
+      btnData: document.getElementById("btnData"),
+      btnDemo: document.getElementById("btnDemo"),
+      errBox: document.getElementById("errBox"),
+      statusPill: document.getElementById("statusPill")
+    };
+
+    function clamp01(x){
+      if (!Number.isFinite(x)) return 0.01;
+      return Math.min(1, Math.max(0, x));
+    }
+    function fmt2(x){ return (Math.round(x*100)/100).toFixed(2); }
+    function fmt4(x){ return (Math.round(x*10000)/10000).toFixed(4); }
+
+    function parseSeries(text){
+      const raw = text
+        .split(/[,;\n\r\t]+/g)
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const vals = raw.map(v => Number(v.replace(",", "."))); // tolera coma decimal si viene solo (raro)
+      if (vals.length < 3) throw new Error("La serie debe tener al menos 3 valores para estimar tendencia.");
+      if (vals.some(v => !Number.isFinite(v))) throw new Error("Hay valores no numéricos. Revisa el formato (ej.: 45, 48, 47).");
+      return vals;
+    }
+
+    // Esto es en lo que ha presentado fallos la IA
+    function holtForecast(series, alpha, beta){
+      const n = series.length;
+      alpha = clamp01(alpha);
+      beta  = clamp01(beta);
+
+      const F = new Array(n).fill(null); 
+      const Ls = new Array(n).fill(null);
+      const Ts = new Array(n).fill(null);
+
+      // Condiciones iniciales (t=1): a_1 = d_1, b_1 = 0
+      let a = series[0];
+      let b = 0;
+
+      Ls[0] = a; 
+      Ts[0] = b; 
+      F[0] = null; 
+
+      for (let t = 1; t < n; t++) {
+        // D_t+1 = a_t + b_t
+        F[t] = a + b;
+
+        const d_t = series[t];
+        
+        // a_t = α*d_t + (1-α)*(a_t-1 + b_t-1)
+        const a_new = alpha * d_t + (1 - alpha) * (a + b);
+        
+        // b_t = β*(a_t - a_t-1) + (1-β)*b_t-1
+        const b_new = beta * (a_new - a) + (1 - beta) * b;
+
+        a = a_new;
+        b = b_new;
+
+        Ls[t] = a;
+        Ts[t] = b;
+      }
+
+      return { F, Ls, Ts };
+    }
+
+    function computeErrors(series, forecast){
+      // Ignora t=0 (sin forecast)
+      let m = 0, sumAbs = 0, sumSq = 0;
+      for (let t=1; t<series.length; t++){
+        const A = series[t];
+        const F = forecast[t];
+        if (!Number.isFinite(F)) continue;
+        const e = A - F;
+        sumAbs += Math.abs(e);
+        sumSq  += e*e;
+        m++;
+      }
+      const MAD = m ? (sumAbs / m) : NaN;
+      const MSE = m ? (sumSq  / m) : NaN;
+      return { MAD, MSE, m };
+    }
+
+    function buildLabels(n){
+      return Array.from({length:n}, (_,i)=>`Mes ${i+1}`);
+    }
+
+    let state = {
+      series: parseSeries(els.dataInput.value),
+      alpha: Number(els.alpha.value),
+      beta: Number(els.beta.value),
+      chart: null
+    };
+
+    function setStatus(text, tone="neutral"){
+      els.statusPill.textContent = text;
+      const map = {
+        neutral: "rgba(255,255,255,.03)",
+        good: "rgba(75,227,165,.10)",
+        warn: "rgba(255,204,102,.10)",
+        bad: "rgba(255,92,122,.10)"
+      };
+      const bmap = {
+        neutral: "rgba(255,255,255,.10)",
+        good: "rgba(75,227,165,.28)",
+        warn: "rgba(255,204,102,.28)",
+        bad: "rgba(255,92,122,.28)"
+      };
+      els.statusPill.style.background = map[tone] || map.neutral;
+      els.statusPill.style.border = "1px solid " + (bmap[tone] || bmap.neutral);
+    }
+
+    function showError(msg){
+      els.errBox.style.display = "block";
+      els.errBox.textContent = msg;
+    }
+    function clearError(){
+      els.errBox.style.display = "none";
+      els.errBox.textContent = "";
+    }
+
+    function syncPills(){
+      els.alphaPill.textContent = fmt2(state.alpha);
+      els.betaPill.textContent = fmt2(state.beta);
+      els.abPill.textContent = `α=${fmt2(state.alpha)} · β=${fmt2(state.beta)}`;
+      els.nBadge.textContent = `N=${state.series.length}`;
+    }
+
+    function updateKPIs(MAD, MSE){
+      els.madVal.textContent = Number.isFinite(MAD) ? fmt4(MAD) : "—";
+      els.mseVal.textContent = Number.isFinite(MSE) ? fmt4(MSE) : "—";
+    }
+
+    function ensureChart(){
+      const ctx = document.getElementById("chart");
+      if (state.chart) return;
+
+      state.chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: buildLabels(state.series.length),
+          datasets: [
+            {
+              label: "Demanda Real",
+              data: state.series,
+              borderColor: "rgba(233,238,251,.92)",
+              backgroundColor: "rgba(233,238,251,.08)",
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              borderWidth: 2,
+              tension: 0.25
+            },
+            {
+              label: "Previsión",
+              data: new Array(state.series.length).fill(null),
+              borderColor: "rgba(74,163,255,.95)",
+              backgroundColor: "rgba(74,163,255,.10)",
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              borderWidth: 2,
+              tension: 0.25
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: "index", intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: "rgba(233,238,251,.85)" }
+            },
+            tooltip: {
+              backgroundColor: "rgba(7,11,20,.92)",
+              borderColor: "rgba(255,255,255,.14)",
+              borderWidth: 1,
+              titleColor: "rgba(233,238,251,.95)",
+              bodyColor: "rgba(233,238,251,.9)"
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,.06)" },
+              ticks: { color: "rgba(155,176,211,.85)" }
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,.06)" },
+              ticks: { color: "rgba(155,176,211,.85)" }
+            }
+          }
+        }
+      });
+    }
+
+    function render(){
+      syncPills();
+      ensureChart();
+
+      const { F } = holtForecast(state.series, state.alpha, state.beta);
+      const { MAD, MSE } = computeErrors(state.series, F);
+
+      updateKPIs(MAD, MSE);
+
+      state.chart.data.labels = buildLabels(state.series.length);
+      state.chart.data.datasets[0].data = state.series.slice();
+      state.chart.data.datasets[1].data = F.map((v, i) => (i === 0 ? null : v));
+      state.chart.update("none");
+    }
+
+    function setAlphaBeta(a, b){
+      state.alpha = clamp01(a);
+      state.beta  = clamp01(b);
+      els.alpha.value = fmt2(state.alpha);
+      els.beta.value  = fmt2(state.beta);
+      render();
+    }
+
+    function gridSearchOptima(){
+      const series = state.series;
+      let bestA = 0, bestB = 0, bestError = Infinity;
+      
+      // Leemos qué ha elegido el usuario en el desplegable
+      const target = document.getElementById("optTarget").value; 
+
+      // Iteramos de 0 a 100 (incluido) para que pruebe el 0 y el 1 exactos
+      for (let ai = 0; ai <= 100; ai++){
+        const a = ai / 100;
+        for (let bi = 0; bi <= 100; bi++){
+          const b = bi / 100;
+          
+          const { F } = holtForecast(series, a, b);
+          const { MAD, MSE } = computeErrors(series, F);
+          
+          // Elegimos el error a vigilar según el desplegable
+          const currentError = (target === "ECM") ? MSE : MAD;
+
+          if (Number.isFinite(currentError) && currentError < bestError){
+            bestError = currentError;
+            bestA = a;
+            bestB = b;
+          }
+        }
+      }
+      return { bestA, bestB };
+    }
+
+    // Eventos sliders
+    els.alpha.addEventListener("input", () => {
+      state.alpha = Number(els.alpha.value);
+      render();
+    });
+    els.beta.addEventListener("input", () => {
+      state.beta = Number(els.beta.value);
+      render();
+    });
+
+    // Reset
+    els.btnReset.addEventListener("click", () => {
+      clearError();
+      setStatus("Listo", "neutral");
+      setAlphaBeta(DEFAULT_ALPHA, DEFAULT_BETA);
+    });
+
+    // Datos demo
+    els.btnDemo.addEventListener("click", () => {
+      clearError();
+      els.dataInput.value = DEFAULT_SERIES;
+      try{
+        state.series = parseSeries(els.dataInput.value);
+        setStatus("Datos cargados", "good");
+        render();
+      }catch(e){
+        setStatus("Error", "bad");
+        showError(e.message || String(e));
+      }
+    });
+
+    // Actualizar datos
+    els.btnData.addEventListener("click", () => {
+      clearError();
+      try{
+        const series = parseSeries(els.dataInput.value);
+        state.series = series;
+        setStatus("Datos actualizados", "good");
+        render();
+      }catch(e){
+        setStatus("Error", "bad");
+        showError(e.message || String(e));
+      }
+    });
+
+    // Optimización (grid search)
+    els.btnOpt.addEventListener("click", async () => {
+      clearError();
+      els.btnOpt.disabled = true;
+      els.btnData.disabled = true;
+      els.btnReset.disabled = true;
+      els.btnDemo.disabled = true;
+      setStatus("Optimizando…", "warn");
+
+      // Deja respirar la UI antes del bucle pesado
+      await new Promise(r => setTimeout(r, 30));
+
+      try{
+        const { bestA, bestB } = gridSearchOptima();
+        setAlphaBeta(bestA, bestB);
+        setStatus("Óptimos aplicados", "good");
+      }catch(e){
+        setStatus("Error", "bad");
+        showError(e.message || String(e));
+      }finally{
+        els.btnOpt.disabled = false;
+        els.btnData.disabled = false;
+        els.btnReset.disabled = false;
+        els.btnDemo.disabled = false;
+      }
+    });
+
+    // Init
+    (function init(){
+      clearError();
+      setStatus("Listo", "neutral");
+      setAlphaBeta(Number(els.alpha.value), Number(els.beta.value));
+      render();
+    })();
+  </script>
+</body>
+</html>

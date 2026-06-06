@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dirección de la Producción - Memoria Interactiva</title>
+    <!-- MathJax Configuration & Script for LaTeX support -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            /* Palette HSL - Sophisticated Aeronautical Theme */
+            --primary: hsl(220, 85%, 57%);
+            /* Cobalt Blue */
+            --primary-glow: rgba(37, 99, 235, 0.15);
+            --primary-hover: hsl(220, 85%, 48%);
+
+            --dark-slate: hsl(224, 71%, 4%);
+            /* Deep dark background */
+            --sidebar-bg: hsl(224, 40%, 8%);
+            /* Dark gray-blue sidebar */
+            --sidebar-hover: rgba(255, 255, 255, 0.04);
+            --sidebar-active-bg: rgba(37, 99, 235, 0.08);
+
+            --text-main: hsl(215, 25%, 27%);
+            /* Slate 700 */
+            --text-muted: hsl(215, 16%, 47%);
+            /* Slate 500 */
+            --text-light: hsl(210, 40%, 96%);
+            /* Light text for dark areas */
+
+            --bg-light: hsl(210, 40%, 98%);
+            /* Cool white */
+            --bg-card: #ffffff;
+            --border-color: hsl(214, 32%, 91%);
+            --border-hover: hsl(214, 32%, 85%);
+
+            --sidebar-width: 290px;
+            --font-headings: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-body: 'Inter', -apple-system, sans-serif;
+
+            /* Fluid Easing */
+            --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+            --transition-smooth: all 0.3s var(--ease-out);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Desplazamiento suave al hacer clic en los enlaces */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-main);
+            background: #ffffff;
+            line-height: 1.7;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* =========================================
+           1. SECCIÓN HERO (PANTALLA DE INICIO)
+           ========================================= */
+        .hero {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            /* Efecto Parallax con background-attachment: fixed. Gradiente sofisticado */
+            background: linear-gradient(to bottom, rgba(9, 13, 22, 0.65), rgba(9, 13, 22, 0.9)),
+                url('https://images.unsplash.com/photo-1737059217479-1f3ee86b5708?q=80&w=1634&auto=format&fit=crop') center center / cover fixed no-repeat;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            color: #ffffff;
+            padding: 40px;
+        }
+
+        .hero h1 {
+            font-family: var(--font-headings);
+            font-size: 3.75rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            margin-bottom: 24px;
+            line-height: 1.15;
+            max-width: 950px;
+            text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+            animation: heroFadeIn 1.2s var(--ease-out);
+        }
+
+        .hero p {
+            font-family: var(--font-headings);
+            font-size: 1.05rem;
+            font-weight: 500;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            max-width: 800px;
+            color: rgba(255, 255, 255, 0.75);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            padding-top: 20px;
+            animation: heroFadeIn 1.6s var(--ease-out);
+        }
+
+        /* Animación del indicador de scroll a una línea minimalista vertical en lugar de una flecha genérica */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 45px;
+            color: #ffffff;
+            text-decoration: none;
+            font-family: var(--font-headings);
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.65;
+            transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
+            animation: heroFadeIn 2s var(--ease-out);
+        }
+
+        .scroll-indicator:hover {
+            opacity: 1;
+            transform: translateY(3px);
+        }
+
+        /* Línea de scroll animada y minimalista */
+        .scroll-indicator::after {
+            content: '';
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, #ffffff, rgba(255, 255, 255, 0));
+            margin-top: 15px;
+            animation: scrollLine 2s infinite var(--ease-out);
+            transform-origin: top;
+        }
+
+        .scroll-indicator svg {
+            display: none;
+            /* Reemplazado por la elegante barra */
+        }
+
+        @keyframes heroFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scrollLine {
+            0% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+
+            30% {
+                transform: scaleY(1);
+                opacity: 0.8;
+            }
+
+            60% {
+                transform: translateY(20px) scaleY(0);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+        }
+
+        /* =========================================
+           2. CONTENEDOR DE LA MEMORIA
+           ========================================= */
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            background: #ffffff;
+            position: relative;
+        }
+
+        /* --- Menú Lateral (Sticky y de estética técnica sofisticada) --- */
+        .sidebar {
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--sidebar-bg);
+            position: sticky;
+            top: 0;
+            padding: 50px 24px;
+            overflow-y: auto;
+            color: #ffffff;
+            flex-shrink: 0;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+        }
+
+        .sidebar h2 {
+            font-family: var(--font-headings);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            padding-bottom: 0px;
+            border-bottom: none;
+        }
+
+        .sidebar a {
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.55);
+            text-decoration: none;
+            padding: 11px 16px;
+            border-radius: 8px;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: var(--transition-smooth);
+            position: relative;
+        }
+
+        .sidebar a:hover {
+            color: #ffffff;
+            background: var(--sidebar-hover);
+            transform: translateX(4px);
+        }
+
+        .sidebar a.active {
+            color: #ffffff;
+            background: var(--sidebar-active-bg);
+            font-weight: 600;
+        }
+
+        /* Indicador de barra vertical izquierda de estado activo */
+        .sidebar a::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 30%;
+            height: 40%;
+            width: 3px;
+            background: var(--primary);
+            border-radius: 0 4px 4px 0;
+            transform: scaleY(0);
+            transition: var(--transition-smooth);
+        }
+
+        .sidebar a.active::before {
+            transform: scaleY(1);
+            top: 20%;
+            height: 60%;
+        }
+
+        /* --- Contenido Principal --- */
+        .main-content {
+            padding: 90px 80px;
+            width: calc(100% - var(--sidebar-width));
+            background: #ffffff;
+        }
+
+        /* Centrado y ancho extra (1250px) para Excels */
+        section {
+            max-width: 1250px;
+            margin-left: auto;
+            margin-right: auto;
+            margin-bottom: 110px;
+            scroll-margin-top: 60px;
+
+            /* Animación de entrada suave basada en scroll-reveal */
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Clase activada mediante JS */
+        section.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Títulos de sección estilo portafolio editorial */
+        h2 {
+            font-family: var(--font-headings);
+            color: var(--dark-slate);
+            font-size: 1.85rem;
+            font-weight: 700;
+            margin: 0 0 32px 0;
+            border-left: none;
+            padding-left: 0;
+            letter-spacing: -0.02em;
+            position: relative;
+            display: inline-block;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: -8px;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        h3 {
+            font-family: var(--font-headings);
+            color: var(--dark-slate);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 40px 0 20px 0;
+            letter-spacing: -0.01em;
+            border-left: 3px solid var(--primary);
+            padding-left: 12px;
+        }
+
+        .math-block {
+            margin: 24px 0;
+            padding: 16px;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        p {
+            font-family: var(--font-body);
+            font-size: 0.98rem;
+            margin-bottom: 24px;
+            text-align: justify;
+            color: var(--text-main);
+            line-height: 1.75;
+        }
+
+        /* Formateo elegante de listas */
+        p ul,
+        p li {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        /* --- Contenedores Interactivos (Simulación de Sandbox MacOS) --- */
+        .interactive-container {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-light);
+            margin: 35px 0 50px 0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 8px 24px rgba(149, 157, 165, 0.1);
+            transition: var(--transition-smooth);
+        }
+
+        .interactive-container:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02), 0 12px 30px rgba(149, 157, 165, 0.15);
+        }
+
+        .container-header {
+            background: #ffffff;
+            padding: 16px 24px;
+            font-family: var(--font-headings);
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--dark-slate);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Cabecera con 3 puntos tipo macOS */
+        .container-header::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff5f56;
+            box-shadow: 14px 0 0 #ffbd2e, 28px 0 0 #27c93f;
+            margin-right: auto;
+        }
+
+        .container-header span:first-child {
+            margin-left: 42px;
+            /* Espacio para los puntos de ventana */
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+
+        /* Badges rediseñados tipo dashboard */
+        .container-header .badge {
+            background: rgba(37, 99, 235, 0.08);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(37, 99, 235, 0.15);
+            transition: var(--transition-smooth);
+        }
+
+        /* Punto verde pulsante en el badge */
+        .container-header .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 5px rgba(37, 99, 235, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+            }
+        }
+
+        /* Altura forzada para los Excels/HTML con visualización nítida */
+        iframe {
+            width: 100% !important;
+            height: 750px !important;
+            border: none;
+            display: block;
+            background: #ffffff;
+        }
+
+        /* --- Imágenes y Gráficos Premium --- */
+        .img-container {
+            margin: 40px 0;
+            text-align: center;
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-light);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01), 0 8px 24px rgba(149, 157, 165, 0.05);
+            transition: var(--transition-smooth);
+        }
+
+        .img-container:hover {
+            border-color: var(--border-hover);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.01), 0 12px 30px rgba(149, 157, 165, 0.1);
+        }
+
+        .img-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            transition: transform 0.5s var(--ease-out);
+        }
+
+        .img-container:hover img {
+            transform: scale(1.015);
+        }
+
+        .img-caption {
+            font-family: var(--font-body);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            margin-top: 16px;
+            font-style: italic;
+            letter-spacing: -0.01em;
+        }
+
+        /* Ajustes específicos para pantallas panorámicas y portátiles medianos */
+        @media (max-width: 1200px) {
+            .main-content {
+                padding: 60px 40px;
+            }
+        }
+
+        @media (max-width: 992px) {
+            :root {
+                --sidebar-width: 80px;
+            }
+
+            .sidebar h2 {
+                display: none;
+            }
+
+            .sidebar a {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .sidebar a span {
+                display: none;
+            }
+        }
+
+        /* Capitular editorial */
+        .drop-cap::first-letter {
+            font-family: var(--font-headings);
+            font-size: 3.8rem;
+            font-weight: 800;
+            float: left;
+            line-height: 0.8;
+            margin: 4px 12px 0 0;
+            color: var(--primary);
+            text-transform: uppercase;
+        }
+
+        /* Blockquotes estilizados para citas y conclusiones de impacto */
+        blockquote {
+            background: var(--bg-light);
+            border-left: 4px solid var(--primary);
+            padding: 24px;
+            border-radius: 0 12px 12px 0;
+            margin: 30px 0;
+            font-family: var(--font-body);
+            font-style: italic;
+            font-size: 1.05rem;
+            color: var(--text-main);
+            line-height: 1.75;
+            position: relative;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        blockquote strong {
+            color: var(--dark-slate);
+        }
+
+        /* Lightbox Overlay for Image Zoom */
+        .lightbox-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(9, 13, 22, 0.9);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s var(--ease-out);
+        }
+
+        .lightbox-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .lightbox-img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.5);
+            transform: scale(0.9);
+            transition: transform 0.4s var(--ease-out);
+            cursor: zoom-out;
+        }
+
+        .lightbox-overlay.active .lightbox-img {
+            transform: scale(1);
+        }
+
+        .img-container img {
+            cursor: zoom-in;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================
+         SECCIÓN HERO (EL IMPACTO INICIAL)
+         ========================================= -->
+    <header class="hero">
+        <h1>Dirección de la Producción en un Hangar de Aviones</h1>
+        <p>David Smarandescu &nbsp;|&nbsp; Madrid, Junio 2026</p>
+
+        <!-- Flecha para bajar al contenido -->
+        <a href="#inicio-memoria" class="scroll-indicator">
+            Explorar Proyecto
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3">
+                </path>
+            </svg>
+        </a>
+    </header>
+
+    <!-- =========================================
+         ESTRUCTURA DE LA MEMORIA
+         ========================================= -->
+    <div class="layout-wrapper" id="inicio-memoria">
+
+        <!-- MENÚ LATERAL -->
+        <nav class="sidebar">
+            <h2>Índice del Proyecto</h2>
+            <a href="#sec-1" class="active">1. Introducción</a>
+            <a href="#sec-2">2. Punto de Equilibrio</a>
+            <a href="#sec-3">3. Análisis Estructural</a>
+            <a href="#sec-4">4. Modelo EOQ</a>
+            <a href="#sec-5">5. Alisado Exponencial</a>
+            <a href="#sec-6">6. Planificación y Operaciones</a>
+            <a href="#sec-7">7. Sistemas MRP y MPS</a>
+            <a href="#sec-8">8. Control de Producción</a>
+            <a href="#sec-9">9. Lean Manufacturing</a>
+            <a href="#sec-10">10. Conclusión Global</a>
+            <a href="#sec-11">11. Anexo</a>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main class="main-content">
+            <!-- 1. INTRODUCCIÓN -->
+            <section id="sec-1">
+                <h2>1. Introducción</h2>
+                <p class="lead">El entorno operativo de un hangar de aeronaves difiere radicalmente de cualquier almacén
+                    logístico o planta de manufactura industrial tradicional.</p>
+                <p class="drop-cap">Un hangar destinado al <strong>Mantenimiento, Reparación y Revisión (MRO, por sus
+                        siglas en inglés)</strong> constituye un ecosistema de precisión crítica donde la producción no
+                    se centra en la fabricación masiva y en cadena de bienes de consumo, sino en la restitución
+                    meticulosa, certificada y segura de la aeronavegabilidad de activos que poseen un valor de cientos
+                    de millones de dólares. En este contexto de alta exigencia técnica y regulatoria, la dirección de la
+                    producción trasciende la simple asignación diaria de tareas; se erige como una coreografía
+                    matemática de recursos humanos altamente cualificados, cadenas de suministro globales de repuestos,
+                    infraestructuras de altísima complejidad y un cumplimiento normativo aeronáutico draconiano.</p>
+
+                <p>A nivel global, el valor del mercado MRO proyecta alcanzar los <strong>108.000 millones de dólares
+                        para el año 2030</strong>, respaldado por una tasa de crecimiento anual compuesta (CAGR) del
+                    4.8%. En esta industria, cada decisión operativa, cada estrategia de secuenciación y cada dólar
+                    invertido en la gestión de instalaciones o en el control de calidad protege directamente esta
+                    inmensa base de ingresos y, lo que es más importante, salvaguarda vidas humanas.</p>
+
+                <p>La gestión de un hangar comercial moderno conlleva una carga de cumplimiento normativo que la inmensa
+                    mayoría de los directores de operaciones en otros sectores industriales jamás llegan a enfrentar. La
+                    verdadera diferencia entre un hangar de base que supera las auditorías internacionales con éxito y
+                    uno que resulta penalizado, paralizado o clausurado, raramente radica en la destreza técnica
+                    individual de sus ingenieros o mecánicos. Por el contrario, la clave del éxito reside en la
+                    trazabilidad documental absoluta y en la integridad sistémica de su gestión de la producción.</p>
+
+                <blockquote>
+                    <strong>EASA Part-145 (Planificación de la Producción):</strong> Las normativas internacionales que
+                    rigen el sector, tales como la Parte 145 de la Agencia Europea de Seguridad Aérea (EASA Part-145) y
+                    las regulaciones homólogas de la Administración Federal de Aviación estadounidense (FAR Part-145),
+                    establecen directrices innegociables. Específicamente, el apartado EASA 145.A.47, relativo a la
+                    Planificación de la Producción, exige explícitamente que la organización MRO demuestre y garantice
+                    la disponibilidad ininterrumpida de personal certificado, herramientas calibradas, equipos de izado,
+                    materiales rastreables y datos de mantenimiento rigurosamente actualizados antes de que cualquier
+                    tarea sobre la aeronave sea siquiera iniciada. Esto impone que la planificación de la producción no
+                    sea interpretada como un mero servicio de soporte administrativo, sino como el eje integrador de las
+                    mejores prácticas globales, gestionando proactivamente la disponibilidad de las bahías del hangar,
+                    el control de inventarios críticos, la coordinación de subcontratistas especializados y la
+                    mitigación de los riesgos derivados de la fatiga humana.
+                </blockquote>
+
+                <p>El coste financiero y operativo de los fallos en este ecosistema es verdaderamente astronómico. Las
+                    interrupciones no se miden en simples retrasos de entrega, sino en aeronaves inmovilizadas en tierra
+                    (estado AOG, Aircraft On Ground), cancelaciones de vuelos comerciales, multas regulatorias y la
+                    erosión instantánea de la confianza de las aerolíneas clientes.</p>
+
+                <blockquote>
+                    <strong>El Coste de la Ineficiencia Técnica:</strong> A modo de ejemplo ilustrativo del peso de la
+                    infraestructura, un fallo no planificado en el sistema electromecánico de las puertas monumentales
+                    de un hangar acarrea un coste medio de <strong>47.000 dólares</strong>, sumando las reparaciones
+                    directas, los retrasos en el reposicionamiento de las aeronaves de fuselaje ancho y la disrupción
+                    general de todo el calendario MRO de la estación. Sorprendentemente, el <strong>34% de las
+                        citaciones y multas de seguridad industrial (OSHA)</strong> en la aviación involucran lagunas en
+                    los registros de activos de la instalación (como grúas o sistemas contra incendios), no errores
+                    operativos de los mecánicos de vuelo.
+                </blockquote>
+
+                <p>Por consiguiente, adentrarse en la dirección de operaciones en este sector exige abandonar de
+                    inmediato la improvisación y los métodos de gestión analógicos. Requiere implementar un enfoque
+                    gerencial fuertemente estructurado, basado en datos cuantitativos y modelado matemático, que abarque
+                    desde la evaluación de la viabilidad económica inicial (Break-Even) y el diseño estructural de las
+                    maniobras, hasta la optimización de los inventarios mediante algoritmos (EOQ), previsiones
+                    probabilísticas de demanda, robustos procesos de Planificación de Ventas y Operaciones (S&OP),
+                    sistemas de Planificación de Requerimientos de Materiales (MRP) y el control visual de la planta
+                    productiva mediante filosofías Lean Manufacturing y Seis Sigma. El presente informe de investigación
+                    desglosa de manera exhaustiva y analítica cada uno de estos vectores estratégicos, proporcionando
+                    una visión integral, cohesionada y eminentemente gerencial para la dirección moderna de la
+                    producción aeronáutica.</p>
+            </section>
+
+            <!-- 2. PUNTO DE EQUILIBRIO -->
+            <section id="sec-2">
+                <h2>2. Punto de Equilibrio de Producción</h2>
+                <p class="lead">Antes de abordar la optimización de los flujos de trabajo físicos en el interior del
+                    hangar, es imperativo para la dirección establecer la viabilidad financiera basal de las
+                    operaciones.</p>
+                <p>El mantenimiento pesado de aeronaves implica la absorción de costes fijos colosales derivados del
+                    mantenimiento de la macro-infraestructura (hangares que frecuentemente superan los <strong>7.000
+                        metros cuadrados de espacio de luz libre</strong>), las pólizas de seguros aeronáuticos, la
+                    certificación y calibración continua de las instalaciones (como tanques privados de almacenamiento
+                    de agua de 1.00.000 de litros para sistemas de supresión de incendios por espuma de baja expansión
+                    AFFF
+                    y sistemas de grúa puente) y, de forma crítica, la retención de una plantilla de personal técnico e
+                    ingenieros altamente especializados.</p>
+
+                <p>Para modelar esta realidad operativa y financiera de forma precisa, se ha desarrollado un análisis
+                    del Punto de Equilibrio de Producción (Break-Even Point) aplicado a la carga de trabajo proyectada
+                    de un hangar hipotético. El modelo analítico asume un entorno donde la instalación asume de forma
+                    íntegra proyectos de mantenimiento pesado para un modelo específico de aeronave comercial. La
+                    estructura de costes ha sido parametrizada de la siguiente manera, reflejando de forma fidedigna la
+                    alta carga de costes fijos y los elevados consumos de materiales inherentes al sector aeroespacial:
+                </p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>📊 Punto de Equilibrio con 1 Producto</span>
+                        <span class="badge">Excel Interactivo</span>
+                    </div>
+                    <iframe
+                        src="https://1drv.ms/x/c/fd39c01f0b5a857d/IQQXtPWPD5OPRaK20s8E3ISmAYwji08JlYGmXO0_47tmiXQ?em=2&AllowTyping=True&wdHideGridlines=True&wdHideHeaders=True&wdDownloadButton=True&wdInConfigurator=True&edaebf=rslc0"></iframe>
+                </div>
+
+                <p>El análisis cuantitativo de esta matriz de costes exige aislar, en primer lugar, los costes fijos
+                    totales de la instalación, que ascienden a la suma de <strong>248.000.000 €</strong>. Seguidamente,
+                    se determinan los costes variables unitarios agregados por cada aeronave procesada, los cuales se
+                    sitúan en <strong>165.000.000 €</strong> (compuestos mayoritariamente por los inmensos costes de los
+                    repuestos y materiales de aviación aprobados). En consecuencia, el margen de contribución generado
+                    por cada unidad (aeronave) procesada a través del hangar se establece en <strong>35.000.000
+                        €</strong>.</p>
+
+                <div class="math-block">
+                    $$Q = \frac{\text{Costes Fijos}}{\text{Precio de Venta} - \text{Coste Variable Unitario}}$$
+                </div>
+
+                <p>Aplicando la formulación algebraica clásica del punto de equilibrio, el resultado operativo determina
+                    que la supervivencia de la estación de mantenimiento exige la facturación, procesamiento completo y
+                    liberación al servicio de exactamente <strong>7,09 aeronaves</strong> en el periodo analizado.</p>
+
+                <p>Desde una perspectiva gerencial y de planificación estratégica, este umbral crítico de <strong>7,09
+                        unidades</strong> representa la <strong>"Carga Base de Trabajo" (Base Load)</strong>
+                    innegociable que el departamento comercial y la unidad de planificación táctica (S&OP) deben
+                    asegurar contractual y logísticamente para garantizar que la estación no incurra en pérdidas
+                    operativas. Este modelo financiero evidencia una extrema sensibilidad matemática al coste de
+                    adquisición de los materiales, los cuales representan la abrumadora mayoría de los costes variables.
+                </p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>📊 Punto de Equilibrio con Varios Productos</span>
+                        <span class="badge">Excel Interactivo</span>
+                    </div>
+                    <iframe
+                        src="https://1drv.ms/x/c/fd39c01f0b5a857d/IQTKya1vmVxUQp0yWa9AirCsAc94ODUbQSyM5Xx6DYBbOfs?em=2&AllowTyping=True&wdHideGridlines=True&wdHideHeaders=True&wdDownloadButton=True&wdInConfigurator=True&edaebf=rslc0"></iframe>
+                </div>
+
+                <p>Dado que la realidad operativa del hangar implica la diversificación de la capacidad de producción
+                    para atender simultáneamente a diferentes flotas, se ha expandido el análisis hacia un modelo de
+                    equilibrio multiproducto que contempla tres variantes de aeronaves comerciales (<strong>Modelos A, B
+                        y C</strong>). Este enfoque permite evaluar la rentabilidad combinada en función de una mezcla
+                    de ventas (sales mix) proyectada.</p>
+
+                <p>Al desagregar los márgenes de cada línea de producción, los resultados financieros arrojan que la
+                    aeronave con mayor margen de contribución unitario es el <strong>Modelo B</strong>. Desde un punto
+                    de vista de planificación estratégica, la política comercial de la compañía debería priorizar
+                    activamente la captación y asignación de slots de mantenimiento para este modelo, maximizando así la
+                    conversión de ingresos en margen neto y acelerando la absorción de los costes fijos de la
+                    instalación.</p>
+
+                <p>Asimismo, el modelo matemático determina las cantidades mínimas críticas que deben procesarse de cada
+                    variante para superar el umbral de pérdidas y alcanzar una utilidad operativa positiva.
+                    Específicamente, el plan de producción del hangar establece que se deberán vender y liberar al
+                    servicio, como mínimo, <strong>18 aeronaves del Modelo A</strong>, <strong>12 aeronaves del Modelo
+                        B</strong> y <strong>9 aeronaves del Modelo C</strong> de forma combinada durante el ejercicio.
+                </p>
+
+                <h3>Conclusión Estratégica y Sensibilidad del Modelo</h3>
+                <p>Este modelo financiero evidencia una extrema sensibilidad matemática al coste de adquisición de los
+                    materiales, los cuales representan la abrumadora mayoría de los costes variables de la organización.
+                </p>
+
+                <p>Una fluctuación alcista en los precios de las materias primas o una disrupción severa en la cadena de
+                    suministro internacional —como la actual escasez global de piezas, los altos precios de los
+                    componentes y los retrasos sistémicos en las entregas que experimenta la industria, según lo
+                    reportado por gigantes del sector como Airbus e Iberia Maintenance— erosionaría velozmente el margen
+                    de contribución unitario. Este escenario macroeconómico desplazaría el umbral de rentabilidad
+                    drásticamente hacia arriba, elevando el número de aeronaves requeridas para el equilibrio y
+                    obligando de inmediato a la dirección de operaciones a captar un mayor volumen de contratos o a
+                    optimizar agresivamente los procesos internos mediante metodologías de mejora continua (Lean-Six
+                    Sigma) para evitar el colapso financiero de la operación.</p>
+            </section>
+
+            <!-- 3. ANÁLISIS ESTRUCTURAL -->
+            <section id="sec-3">
+                <h2>3. Análisis Estructural del Ala de un Avión</h2>
+                <p class="lead">La dirección integral de la producción en un hangar no se limita de manera exclusiva al
+                    control documental o al flujo logístico; exige imperativamente la integración de la ingeniería de
+                    diseño mecánico avanzado para planificar, simular y certificar los protocolos de mantenimiento
+                    físico, especialmente las maniobras de manipulación pesada en planta.</p>
+                <p>Un aspecto singularmente crítico durante las grandes revisiones estructurales es el desmontaje, la
+                    inspección no destructiva y el tratamiento anticorrosión de las superficies aerodinámicas de gran
+                    envergadura. Los datos analíticos revelan que las infraestructuras de soporte son vectores de riesgo
+                    primordiales: un asombroso <strong>62% de los fallos catastróficos en los sistemas de grúas</strong>
+                    de los hangares están precedidos por la omisión de una simple tarea de mantenimiento preventivo
+                    programado.</p>
+
+                <p>Para mitigar estos riesgos inaceptables y planificar de manera absolutamente segura las complejas
+                    operaciones de izado de componentes masivos en el interior de las instalaciones, se ha evaluado
+                    computacionalmente un modelo tridimensional completo de una estructura alar utilizando metodologías
+                    de Diseño Asistido por Ordenador (CAD) y simulaciones de Análisis de Elementos Finitos (FEA). El
+                    diseño base para la simulación partió de un perfil aerodinámico asimétrico estándar de la serie NACA
+                    2412, alcanzando mediante operaciones algorítmicas de escalado una envergadura de estudio de 10
+                    metros. A este modelo digital se le asignaron rigurosamente las propiedades mecánicas reales de la
+                    aleación de <strong>Aluminio 2024</strong>, un estándar histórico en la industria aeroespacial
+                    debido a su excelente relación resistencia-peso y su elevada tolerancia a la propagación del daño.
+                </p>
+
+                <p>El protocolo técnico de mantenimiento dictaba la necesidad de suspender temporalmente esta colosal
+                    estructura utilizando exclusivamente las grúas puente automatizadas del techo del hangar. El anclaje
+                    se diseñó inicialmente proyectando dos áreas circulares de 20 centímetros de diámetro dispuestas
+                    estratégicamente en el extradós (cara superior) del ala. La validación de esta maniobra requirió
+                    someter el modelo a una simulación de cargas estáticas gravitacionales extremas de $9,81\text{
+                    m/s}^2$ aplicados al volumen total para representar el peso propio.</p>
+
+                <div class="interactive-container" style="position: relative;">
+                    <div class="container-header">
+                        <span>🔮 Visor 3D Interactivo (ParaView GLTF) - Arrastra para rotar</span>
+                        <span class="badge">WebGL Activo</span>
+                    </div>
+
+                    <model-viewer src="programas/ala-estructura.gltf" camera-controls auto-rotate
+                        style="width: 100%; height: 750px; background-color: #ffffff; display: block;">
+                    </model-viewer>
+
+                    <img src="imagenes/leyenda-vonmises.png" alt="Escala Von Mises" style="
+                            position: absolute;
+                            bottom: 20px;
+                            right: 20px;
+                            max-width: 150px;
+                            background: rgba(255, 255, 255, 0.9);
+                            padding: 10px;
+                            border-radius: 6px;
+                            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                            border: 1px solid #e2e8f0;
+                            pointer-events: none; /* Para que no moleste al arrastrar el ratón */
+                        ">
+                </div>
+
+                <p>La resolución de la matriz generó un mapa termográfico de tensiones de Von Mises. El análisis de los
+                    resultados reveló que, en lugar de una disipación uniforme, las concentraciones críticas de esfuerzo
+                    convergían de manera alarmante y exclusiva en la periferia inmediata de los dos puntos de anclaje,
+                    disipándose rápidamente hacia el resto de la estructura. Los sensores virtuales registraron una
+                    tensión de cizalladura máxima de 305,55 Megapascales (MPa). Considerando que el límite elástico
+                    operativo recomendado del Aluminio 2024 se sitúa en torno a los 345 MPa (punto a partir del cual el
+                    material sufre deformaciones plásticas irreversibles que destruirían la aerodinámica del ala), el
+                    coeficiente de seguridad estructural ($FS$) resultante de la maniobra planeada es de apenas:</p>
+
+                <div class="math-block">
+                    $$FS = \frac{345\text{ MPa}}{305,55\text{ MPa}} \approx 1.1$$
+                </div>
+
+                <blockquote>
+                    <strong>Coeficiente de Seguridad Crítico (FS ≈ 1.1):</strong> En el estricto marco de la dirección
+                    de operaciones aeronáuticas, el aseguramiento de la calidad (QA) y la seguridad laboral regida por
+                    entidades como OSHA o EASA, un coeficiente de seguridad estático de 1.1 es <strong>operativamente
+                        inaceptable</strong>. Este exiguo margen de error asume condiciones de laboratorio perfectas. En
+                    la realidad de un hangar, la ingeniería de mantenimiento debe imponer márgenes de seguridad
+                    sustancialmente mayores (típicamente superiores a 2.5 o 3.0 para equipos de elevación) para absorber
+                    variables incontrolables tales como variaciones locales en la densidad del material, cargas
+                    dinámicas imprevistas durante el levantamiento inicial (sacudidas o aceleración repentina de los
+                    servomotores de la grúa), o la potencial existencia de microfisuras por fatiga preexistentes en la
+                    aeronave sometida a revisión.
+                </blockquote>
+
+                <p>La directriz gerencial y vinculante derivada de este análisis computacional exige la paralización
+                    inmediata del protocolo original y el rediseño de los utillajes de soporte en el hangar. Como
+                    medidas correctoras obligatorias, se debe ordenar al departamento de mecanizado la fabricación de
+                    cunas de soporte inferior ergonómicas (slings de Kevlar) o la implementación de vigas balancín
+                    (spreader bars) que incrementen el número de puntos de anclaje, logrando así distribuir las cargas
+                    sobre un área superficial mucho mayor y garantizando la integridad tanto del activo multimillonario
+                    como del personal técnico que opera bajo el mismo.</p>
+            </section>
+
+            <!-- 4. MODELO EOQ -->
+            <section id="sec-4">
+                <h2>4. Modelo EOQ</h2>
+                <p class="lead">El aprovisionamiento logístico es la columna vertebral invisible que sostiene el
+                    cumplimiento de los exigentes tiempos de ciclo en un centro MRO.</p>
+                <p>En el sector de la aviación comercial, el inventario no es simplemente un activo contable almacenado;
+                    es una herramienta de protección directa contra el tiempo de inactividad. La inmovilización forzosa
+                    de una aeronave debido a la falta de un repuesto crítico (escenario conocido mundialmente como
+                    <strong>AOG, Aircraft On Ground</strong>) acarrea penalizaciones financieras astronómicas por
+                    pérdida de ingresos operativos de la aerolínea, además de destruir por completo la planificación a
+                    corto plazo del taller.
+                </p>
+
+                <p>Para lograr el nivel óptimo de inventario —buscando minimizar los costes totales de gestión logística
+                    sin comprometer en ningún caso la robustez de la cadena de suministro— la dirección ha implementado
+                    un enfoque analítico sustentado en el modelo clásico de <strong>Cantidad Económica de Pedido (EOQ,
+                        por sus siglas en inglés)</strong>. Este despliegue estratégico se ha centrado en un consumible
+                    de altísima criticidad y rotación constante en la pista: los neumáticos del tren de aterrizaje
+                    principal de las aeronaves.</p>
+
+                <p>El modelo matemático EOQ busca determinar el punto de equilibrio financiero exacto y la intersección
+                    perfecta entre dos fuerzas opuestas: los costes de emisión de pedidos frente a los costes de
+                    posesión o mantenimiento del inventario. Para dominar estas variables, la organización ha
+                    evolucionado tecnológicamente, integrando tableros de control interactivos alimentados por lógicas
+                    algorítmicas de última generación que permiten a los planificadores simular fluctuaciones operativas
+                    en tiempo real.</p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>💻 Cuadro de Mandos Interactivos - Lote Económico (EOQ)</span>
+                        <span class="badge">Programa Interactivo</span>
+                    </div>
+                    <iframe src="programas/eoq.html"></iframe>
+                </div>
+
+                <p>El análisis de sensibilidad profunda derivado del panel interactivo revela directrices fundamentales
+                    que moldean la política global de compras del hangar:</p>
+
+                <h3>Sensibilidad y Elasticidades del Lote Óptimo</h3>
+                <p><strong>Curva de Demanda versus Tamaño del Lote ($Q$):</strong> Cuando se proyecta un incremento
+                    sostenido en la demanda de neumáticos, el tamaño del pedido óptimo indudablemente crece, pero no lo
+                    hace con una progresión lineal. La curva gráfica se va aplanando progresivamente debido al efecto de
+                    la raíz cuadrada presente en la estructura de la fórmula de Wilson ($\sqrt{2DS/Cp}$). Este fenómeno
+                    matemático protege financieramente al hangar, indicando a la gerencia que las incipientes economías
+                    de escala absorben de forma natural una gran parte del impacto logístico.</p>
+
+                <p><strong>Impacto de la Escalada en el Coste de Mantenimiento de Stock ($Cm$):</strong> Si los costes
+                    operativos del hangar se disparan ante mayores exigencias regulatorias de climatización o escasez de
+                    espacio físico, la estrategia óptima es reducir drásticamente el tamaño físico de cada lote. Esto
+                    fuerza a la organización a pivotar hacia un modelo Just-in-Time mitigado, diseñado para mantener el
+                    inventario físico al mínimo técnico indispensable.</p>
+
+                <p>Un hallazgo analítico de gran valor gerencial extraído de las simulaciones es el cálculo de los
+                    coeficientes de elasticidad del modelo EOQ. El análisis matemático demuestra de manera irrefutable
+                    que un incremento proyectado del 10% en la previsión de la demanda histórica arroja una elasticidad
+                    estática del <strong>+48.8%</strong> respecto a la variación del Lote Óptimo de pedido ($Q^*$). En
+                    términos logísticos absolutos, esto se traduce en que el responsable de compras únicamente debe
+                    aumentar el volumen de las órdenes de compra en un <strong>4,88% real y constante</strong>
+                    ($\sqrt{1.10} = 1.0488$). Este amortiguador logístico implícito resulta vital para escalar
+                    agresivamente las capacidades comerciales de la planta sin el riesgo de disparar el capital
+                    inmovilizado en los almacenes.</p>
+            </section>
+
+            <!-- 5. ALISADO EXPONENCIAL -->
+            <section id="sec-5">
+                <h2>5. Alisado Exponencial Doble</h2>
+                <p class="lead">Para alimentar con certeza los complejos modelos paramétricos de gestión de inventarios,
+                    la organización MRO requiere imperativamente pronósticos de demanda de materiales que sean robustos,
+                    fiables y estadísticamente válidos.</p>
+                <p>El reemplazo y consumo de componentes aeronáuticos de alta rotación raramente sigue una distribución
+                    plana; está fuertemente sujeto a la estacionalidad de las flotas y a la emisión repentina de
+                    Directivas de Aeronavegabilidad (AD) obligatorias. Para capturar y domesticar matemáticamente esta
+                    volatilidad, la dirección de producción ha implementado un modelo predictivo avanzado de
+                    <strong>Alisado Exponencial Doble (Método de dos parámetros de Holt)</strong>. Este enfoque supera
+                    al alisado simple al disociar y ajustar continuamente dos variables fundamentales en la serie
+                    temporal: el nivel base estacionario de la demanda (coeficiente $\alpha$) y la tendencia subyacente
+                    de crecimiento o contracción temporal (coeficiente $\beta$).
+                </p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>💻 Simulador de Demanda Aeroespacial - Alisado de Holt</span>
+                        <span class="badge">Programa Interactivo</span>
+                    </div>
+                    <iframe src="programas/alisado.html"></iframe>
+                </div>
+
+                <p>El verdadero hito en la aplicabilidad gerencial de este sistema radica en la integración de un motor
+                    de cálculo iterativo de fuerza bruta (Grid Search). Este motor actúa como el equivalente de alto
+                    rendimiento de los algoritmos de resolución no lineal comerciales, pero está diseñado para barrer y
+                    escanear el espectro continuo y absoluto de las constantes de alisado desde 0.00 hasta 1.00,
+                    corrigiendo las limitaciones de los motores estándar que solían truncarse artificialmente en los
+                    umbrales de 0.01 y 0.99.</p>
+
+                <p>Al poseer una visibilidad algorítmica total, el sistema permite al director de producción decidir
+                    estratégicamente el criterio de minimización del riesgo a través de dos métricas fundamentales:</p>
+
+                <h3>Criterios de Optimización en Pronósticos</h3>
+                <p><strong>Optimización por Error Cuadrático Medio (ECM):</strong> Esta configuración matemática
+                    penaliza de manera exponencial los grandes desvíos puntuales. En el ámbito del mantenimiento
+                    aeronáutico, seleccionar el ECM es la decisión obligatoria cuando se planifica sobre componentes de
+                    alta criticidad (No-Go items), donde un fallo de stock puede generar un escenario AOG inmediato y
+                    paralizar toda la cadena de producción.</p>
+
+                <p><strong>Optimización por Valor Medio del Error (VME):</strong> Orientado a equilibrar de forma lineal
+                    las desviaciones acumuladas en repuestos estándar o consumibles secundarios de baja criticidad.</p>
+
+                <p>Alineando estrictamente estas condiciones del código fuente con la teoría de operaciones, el modelo
+                    predictivo opera en perfecta sincronía, ofreciendo un escudo analítico de certidumbre que estabiliza
+                    las compras de materias primas y apacigua el flujo del Plan Maestro de Producción (MPS) aguas abajo.
+                </p>
+            </section>
+
+            <!-- 6. PLANIFICACIÓN Y OPERACIONES -->
+            <section id="sec-6">
+                <h2>6. Planificación de Ventas y Operaciones</h2>
+                <p class="lead">El verdadero ápice de la complejidad organizativa, de recursos humanos y de gestión
+                    financiera en la industria MRO global se manifiesta durante la ejecución y planificación de un
+                    "D-Check" (Gran Parada o Heavy Maintenance Visit).</p>
+                <p>A diferencia de los rutinarios C-Checks, el D-Check representa el nivel de escrutinio técnico, físico
+                    y de ingeniería más exhaustivo, penetrante e invasivo que existe en el ciclo de vida de la aviación
+                    comercial, implicando el desmontaje casi total del avión para su inspección estructural profunda.
+                </p>
+
+                <div class="img-container">
+                    <img src="imagenes/gantt.png" alt="Diagrama de Gantt de la Gran Parada">
+                    <div class="img-caption">Figura 2: Diagrama de Gantt detallado de la planificación de la Gran
+                        Parada, destacando visualmente en color diferenciado el camino crítico que define los 38 días
+                        laborables del proyecto.</div>
+                </div>
+
+                <div class="img-container">
+                    <img src="imagenes/pert.png" alt="Diagrama de Red PERT de la Gran Parada">
+                    <div class="img-caption">Figura 3: Diagrama de red PERT que ilustra los nodos de actividad, las
+                        dependencias físicas y la secuencia de prelación de las tareas del hangar.</div>
+                </div>
+
+                <p>Para un control quirúrgico de los tiempos de esta macro-operación, se ha estructurado un Análisis
+                    Analítico de Tiempos y Holguras detallado en la siguiente matriz interactiva:</p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>📊 Control de Holguras y Tiempos de Proyecto (PERT/CPM)</span>
+                        <span class="badge">Excel Interactivo</span>
+                    </div>
+                    <iframe
+                        src="https://1drv.ms/x/c/fd39c01f0b5a857d/IQRGeFr6RLvGTY_sevnGxj3yAR0y4LXqWEJGFZOsZx7cggw?em=2&AllowTyping=True&wdHideGridlines=True&wdHideHeaders=True&wdDownloadButton=True&wdInConfigurator=True&edaebf=rslc0"></iframe>
+                </div>
+
+                <p>Tras la resolución algorítmica de la matriz, se determina un camino crítico estricto compuesto por la
+                    secuencia:</p>
+
+                <div class="math-block">
+                    $$T0 \rightarrow T1 \rightarrow T4 \rightarrow T5 \rightarrow T10 \rightarrow T11 \rightarrow T12
+                    \rightarrow T13$$
+                </div>
+
+                <p>Cualquier retraso en alguna de estas actividades supondrá un aumento directo en la duración total del
+                    proyecto, fijada en 38 días laborables. En la realidad de un D-Check, los retrasos surgen
+                    habitualmente por "hallazgos" imprevistos (como fatiga oculta del metal o corrosión galvánica),
+                    expandiendo repentinamente el alcance del trabajo conocido (scope creep).</p>
+
+                <p>Para evitar fallos sistémicos en cadena, las estrategias gerenciales más sofisticadas implementan los
+                    postulados de la <strong>Gestión de Proyectos por Cadena Crítica (CCPM)</strong>. Este enfoque exige
+                    retirar los márgenes de seguridad ocultos que los técnicos inflan localmente. A cambio, la gerencia
+                    agrega estratégicamente amortiguadores de proyecto (project buffers) consolidados al final del
+                    cronograma y amortiguadores de convergencia (feeding buffers) en las intersecciones de tareas
+                    secundarias. Esto mitiga el "síndrome del estudiante" y la Ley de Parkinson, garantizando una
+                    cadencia industrial de alta velocidad hacia la firma del certificado de aeronavegabilidad final.</p>
+            </section>
+
+            <!-- 7. SISTEMAS MRP Y MPS -->
+            <section id="sec-7">
+                <h2>7. Sistemas MRP Y MPS</h2>
+                <p class="lead">Habiendo cimentado la duración macroscópica del proyecto general, el director debe
+                    descender al plano operativo táctico a través del suelo del hangar mediante el uso intensivo del
+                    Sistema de Planificación de Requerimientos de Materiales (MRP).</p>
+                <p>La veloz transición desde un modelo reactivo e históricamente estático hacia un sistema dinámico y
+                    sincronizado es la frontera que distingue a un centro global MRO de categoría élite de una
+                    instalación ineficiente. Integrar orgánicamente la Lista de Materiales y Explosión de Componentes
+                    (BOM) con el cronograma de reparaciones permite ejecutar la "Gran Parada" minimizando los tiempos de
+                    inactividad de los técnicos originados por la espera de piezas (waiting waste). La estructura del
+                    BOM se divide en tres niveles jerárquicos estructurados para los motores objeto de overhaul:</p>
+
+                <ul>
+                    <li><strong>Nivel 0 (Productos Finales):</strong> $P1$ (Kit Overhaul Motor Alta Presión) y $P2$ (Kit
+                        Overhaul Motor Baja Presión).</li>
+                    <li><strong>Nivel 1 (Conjuntos):</strong> $C1$ (Conjunto de Rotor) y $C2$ (Conjunto de Estator).
+                    </li>
+                    <li><strong>Nivel 2 (Piezas):</strong> $p1$ (Álabe de titanio), $p2$ (Rodamiento principal), $p3$
+                        (Sello térmico O-ring) y $p4$ (Tornillería aeronáutica por lote).</li>
+                </ul>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>📊 Simulación Dinámica y Explosión del BOM</span>
+                        <span class="badge">Excel Interactivo</span>
+                    </div>
+                    <iframe
+                        src="https://1drv.ms/x/c/fd39c01f0b5a857d/IQRoCMkbiB8rToLFBm-dXWyHAY-kXjL2TRm48IeU2USB-eE?em=2&AllowTyping=True&wdHideGridlines=True&wdHideHeaders=True&wdDownloadButton=True&wdInConfigurator=True&edaebf=rslc0"></iframe>
+                </div>
+
+                <p>La matriz de simulación evidencia las siguientes directrices estructurales para la toma de decisiones
+                    estratégicas globales:</p>
+
+                <h3>Análisis Crítico de la Carga del BOM</h3>
+                <ul>
+                    <li><strong>Dependencia Crítica del Titanio ($p1$):</strong> Cualquier leve aumento tanto en $P1$
+                        como $P2$ multiplica masivamente la necesidad total de álabes debido a su alta proporción en el
+                        ensamblaje. <em>Acción: Establecer un Stock de Seguridad estratégico equivalente al 15% del
+                            consumo medio histórico exclusivo para esta referencia.</em></li>
+                    <li><strong>Estabilidad de Rodamientos ($p2$):</strong> La demanda es altamente predecible y poco
+                        elástica, al depender casi exclusivamente de los ciclos de alta presión ($P1$). <em>Acción:
+                            Consolidar pedidos en entregas trimestrales o semestrales, reduciendo el coste
+                            logístico.</em></li>
+                    <li><strong>Carga de Trabajo del Estator ($C2$):</strong> El montaje de $C2$ consume
+                        sistemáticamente el 57% de los recursos agregados frente al Rotor ($C1$). <em>Acción:
+                            Identificación de $C2$ como "Cuello de Botella" innegociable bajo la Teoría de las
+                            Restricciones, planificando una asignación obligatoria de doble turno en esta estación del
+                            hangar.</em></li>
+                </ul>
+            </section>
+
+            <!-- 8. CONTROL DE PRODUCCIÓN -->
+            <section id="sec-8">
+                <h2>8. Control de Producción</h2>
+                <p class="lead">El entorno extremadamente volátil y dinámico de los talleres de soporte (back-shops)
+                    donde convergen los flujos continuos de miles de piezas reparables desmontadas enviadas desde la
+                    plataforma (como cajas negras de aviónica o actuadores hidráulicos), exige una disciplina de
+                    despacho local (dispatching) extraordinariamente rigurosa.</p>
+                <p>El control táctico de la planta se resuelve evaluando matemáticamente el comportamiento del flujo
+                    material de las diferentes colas de trabajo acumuladas frente a los centros de mecanizado o bancos
+                    de prueba de control de calidad. Con el objetivo de evaluar empíricamente qué regla heurística de
+                    secuenciación gobierna el taller, se procedió a simular y comparar computacionalmente el
+                    comportamiento de cinco órdenes de trabajo concurrentes contra los cuatro algoritmos clásicos de
+                    gestión de colas: FIFO, SPT, EDD y LPT.</p>
+
+                <div class="interactive-container">
+                    <div class="container-header">
+                        <span>💻 Simulador de Reglas de Secuenciación en Taller MRO</span>
+                        <span class="badge">Programa Interactivo</span>
+                    </div>
+                    <iframe src="programas/control.html"></iframe>
+                </div>
+
+                <p>Las poderosas inferencias operativas derivadas de los resultados determinan la política gerencial que
+                    se debe instaurar en los talleres satélite:</p>
+
+                <h3>Análisis Heurístico de Gestión de Colas</h3>
+                <p><strong>La perspectiva de Flujo de Caja (Regla SPT):</strong> Si la prioridad fuera puramente
+                    maximizar la velocidad interna de facturación y liberar espacio físico en planta, la regla SPT
+                    resulta la ganadora indiscutible, ya que minimiza el Tiempo Medio de Flujo a apenas 13 días, evapora
+                    el inventario en proceso a un WIP mínimo de 2.32 unidades y eleva el índice de utilización de los
+                    recursos mecánicos hasta un sobresaliente 43.08%.</p>
+
+                <blockquote>
+                    <strong>El Impacto del Retraso y la Regla EDD (1.20 días):</strong> El axioma fundamental de la
+                    producción en aviación comercial establece que el retraso de una pieza crítica puede paralizar por
+                    completo la liberación legal y física de un gigantesco avión de fuselaje ancho (Release to Service -
+                    RTS), originando pérdidas masivas de cientos de miles de euros para el cliente. Por tanto, bajo
+                    penalización contractual, la gerencia debe ordenar la adopción general de la regla EDD, la cual
+                    arroja el <strong>Retraso Medio global más bajo y eficiente de toda la simulación (sólo 1.20
+                        días)</strong>.
+                </blockquote>
+
+                <p>Como corolario de advertencia, el modelo demuestra que la aplicación imprudente de la regla LPT
+                    colapsa materialmente el sistema, elevando el tiempo de flujo a 20.50 días y disparando retrasos
+                    acumulados monstruosos de 9.60 días.</p>
+            </section>
+
+            <!-- 9. LEAN MANUFACTURING -->
+            <section id="sec-9">
+                <h2>9. Lean Manufacturing</h2>
+                <p class="lead">En la aviación moderna, la adopción sistémica del paradigma estratégico de Lean
+                    Manufacturing y de las metodologías Lean Six Sigma (LSS) no se considera una opción esotérica, sino
+                    una política obligatoria diseñada para pulverizar los colosales desperdicios (Muda) que
+                    históricamente han sangrado la rentabilidad de las empresas del sector.</p>
+                <p>La industria MRO se caracteriza por operar en un universo convulso de volumen fluctuante y una brutal
+                    variabilidad impredecible en la tipología del daño hallado en los fuselajes. A pesar de estas
+                    asimetrías, conseguir establecer un "flujo de trabajo de una sola pieza" (single-piece flow) es
+                    viable y se traduce en una reducción salvaje del Turn-Around-Time (TAT) de la nave.</p>
+
+                <p>Para consolidar la transición hacia esta filosofía de control visual inmediato, la dirección
+                    corporativa ha decretado la disolución de los antiguos paneles analógicos e instituido tableros
+                    lógicos de empuje y tracción tipo Kanban integrados en formato digital.</p>
+
+                <div class="img-container">
+                    <img src="imagenes/trello.png" alt="Tablero Kanban Digital de Mantenimiento">
+                    <div class="img-caption">Figura 4: Vista previa del Tablero Kanban digital (Trello) para la gestión
+                        del mantenimiento. <a
+                            href="https://trello.com/b/Q4ofE5Vx/tma-tecnicos-de-mantenimiento-aeroportuario"
+                            target="_blank" rel="noopener noreferrer"
+                            style="color: var(--primary); font-weight: 600; text-decoration: underline;">Haz clic aquí
+                            para abrir el tablero interactivo en Trello</a>.</div>
+                </div>
+
+                <p>El flujo de valor Lean integral adoptado en el taller se modela a través de las siguientes columnas
+                    de procesamiento, ofreciendo una panorámica transparente al mánager a nivel de pista:</p>
+                <ul>
+                    <li><strong>En el Limbo / Pendiente de Asignación:</strong> Canal de entrada para requerimientos
+                        burocráticos urgentes e imprevistos, como la "Revisión imperativa de la nueva Directiva de
+                        Aeronavegabilidad (AD) estipulada para el Boeing 737".</li>
+                    <li><strong>Por Hacer (Cola Activa):</strong> Asignaciones documentadas listas para inyección en
+                        planta tan pronto como las capacidades se liberen, como la "Inspección No Destructiva
+                        Estructural (NDT) mediante Corrientes de Foucault sobre el fuselaje del Bombardier CRJ".</li>
+                    <li><strong>En Proceso (WIP - Zona Restrictiva de Flujo Activo):</strong> Indicador medular del
+                        panel. Siguiendo las leyes de Little, un recuento excesivo de operaciones concurrentes ahoga el
+                        rendimiento total y paraliza el hangar al fraccionar la atención humana. Destaca aquí la tarea
+                        viva del "Desmontaje integral del amortiguador oleoneumático de la pata principal de un Airbus
+                        A320".</li>
+                    <li><strong>Delegado:</strong> Control de tareas críticas de calibración externa y firmas de
+                        liberación estructural.</li>
+                    <li><strong>Hecho:</strong> Cierre estricto de registros y firma de la liberación final al servicio
+                        (Release to Service - RTS).</li>
+                </ul>
+            </section>
+
+            <!-- 10. CONCLUSIÓN GLOBAL -->
+            <section id="sec-10">
+                <h2>10. Conclusión Global Estratégica</h2>
+                <p class="lead">La gestión gerencial de un moderno hangar de mantenimiento y servicio de aeronaves
+                    demanda la exigencia innegociable de lograr una fusión equilibrada y armónica entre la robustez
+                    estática de la ingeniería estructural en su faceta dura, la quirúrgica precisión matemática de las
+                    lógicas abstractas asociadas a la analítica moderna de datos (Data Analytics) y, paralelamente, una
+                    profunda y holística visión estratégica directiva sobre la cadena global de suministro.</p>
+
+                <p>La integración de las facetas diseccionadas en este informe valida el principio de que ninguna
+                    instalación MRO que aspire a captar volumen corporativo y pervivir en el mercado puede ser pilotada
+                    de manera fortuita, regida por meras corazonadas o la experiencia tribal rudimentaria de sus
+                    encargados de taller. El modelo económico requiere un estricto blindaje operativo para asegurar el
+                    sobrepasamiento permanente de su ajustado umbral de rentabilidad (Break-Even), concebido para
+                    amortizar los astronómicos costes fijos impuestos por las certificaciones e infraestructuras del
+                    hangar.</p>
+
+                <p>Desde el plano micro, el uso de simuladores tridimensionales FEA conjura catástrofes físicas en
+                    planta al paralizar proactivamente maniobras de izado deficientes (como la revelada por el crítico
+                    coeficiente de seguridad de 1.1). Simultáneamente, ascendiendo al panorama táctico macro, la
+                    reestabilización estocástica mediante las series de Alisado Exponencial Doble retroalimenta con
+                    precisión y nutre las reposiciones del inventario óptimo (EOQ), determinando de forma científica las
+                    elasticidades necesarias para proteger la tesorería ante fluctuaciones de la demanda.</p>
+
+                <p>Transponer esta ingente marea de ecuaciones de ingeniería, reglas heurísticas de secuenciación y
+                    colas lógicas hacia una disciplina física de ejecución visual en planta impuesta por la metodología
+                    Lean Six Sigma y los tableros sincronizados Kanban, es la forma en la que un equipo gerencial
+                    competente cristaliza un verdadero <strong>Sistema Maestro de Dirección Industrial
+                        Estratégica</strong>. Es este enfoque integrado el que transforma una vasta e inerte masa pasiva
+                    de frío metal en un pujante centro activo de flujo de rendimientos, velocidad de entregas continuas
+                    y eficiencia de pura clase mundial; un ecosistema perfeccionado para restablecer equipos de aviación
+                    garantizando seguridad extrema y logrando rentabilidades sobresalientes en la economía global
+                    moderna.</p>
+            </section>
+
+            <!-- 11. ANEXO -->
+            <section id="sec-11">
+                <h2>11. Anexo</h2>
+                <p class="lead">Documentación complementaria y recursos de soporte de la memoria.</p>
+                <p>Toda la información volcada en esta plataforma interactiva representa el núcleo del proyecto para la
+                    asignatura <strong>Dirección de la Producción</strong> en el grado de Administración y Dirección de
+                    Empresas (UPM). Los modelos interactivos se ejecutan de manera descentralizada a través de iframes
+                    integrados desde servicios de cálculo en la nube, garantizando la persistencia, escalabilidad e
+                    interactividad total del documento técnico sin sobrecargar los servidores locales de distribución
+                    web.</p>
+
+                <div class="metadata-block"
+                    style="margin-top: 50px; padding: 24px; border-top: 1px solid var(--border-color); text-align: center;">
+                    <p style="font-size: 0.9rem; font-weight: 600; color: var(--dark-slate); margin-bottom: 4px;">
+                        Universidad Politécnica de Madrid</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Escuela Técnica
+                        Superior de Ingenieros Informáticos</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px;">Doble Grado en
+                        Ingeniería Informática y Administración y Dirección de Empresas</p>
+                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 16px;">Asignatura: Dirección
+                        de la Producción</p>
+                    <p style="font-size: 0.85rem; font-weight: 500; color: var(--primary);">Autor: David Smarandescu
+                        &bull; Madrid, junio 2026</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Scroll-Spy and Section Reveal Animation
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.sidebar a');
+            const sections = document.querySelectorAll('section');
+
+            // 1. Scroll Reveal Observer (for smooth entry animation)
+            const revealOptions = {
+                threshold: 0.05,
+                rootMargin: "0px 0px -80px 0px"
+            };
+
+            const revealObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, revealOptions);
+
+            sections.forEach(section => {
+                revealObserver.observe(section);
+            });
+
+            // 2. Active Sidebar Link Update on Scroll (High-Reliability Scroll-Spy)
+            function updateActiveLink() {
+                let currentSectionId = '';
+                const triggerOffset = window.innerHeight / 2; // Trigger when section top crosses the middle of the viewport
+
+                // Check if scrolled near the bottom of the page (to force-activate the last section)
+                if ((window.innerHeight + window.scrollY) >= document.documentElement.scrollHeight - 120) {
+                    currentSectionId = sections[sections.length - 1].getAttribute('id');
+                } else {
+                    // Find the active section based on viewport position
+                    for (let i = 0; i < sections.length; i++) {
+                        const rect = sections[i].getBoundingClientRect();
+                        if (rect.top <= triggerOffset) {
+                            currentSectionId = sections[i].getAttribute('id');
+                        }
+                    }
+                }
+
+                if (currentSectionId) {
+                    links.forEach(link => {
+                        if (link.getAttribute('href') === `#${currentSectionId}`) {
+                            link.classList.add('active');
+                        } else {
+                            link.classList.remove('active');
+                        }
+                    });
+                }
+            }
+
+            // Attach scroll and resize listeners for real-time tracking
+            let isScrollingFromClick = false;
+            window.addEventListener('scroll', () => {
+                if (isScrollingFromClick) return;
+                updateActiveLink();
+            });
+            window.addEventListener('resize', updateActiveLink);
+            updateActiveLink(); // Initial run
+
+            // 3. Smooth active state update on direct link click
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const targetId = link.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+
+                    if (targetSection) {
+                        isScrollingFromClick = true;
+                        links.forEach(l => l.classList.remove('active'));
+                        link.classList.add('active');
+
+                        // Calculate absolute offset relative to the document
+                        const targetScrollTop = targetSection.getBoundingClientRect().top + window.scrollY - 50;
+                        window.scrollTo({
+                            top: targetScrollTop,
+                            behavior: 'smooth'
+                        });
+
+                        // Re-enable scroll-spy tracking after smooth scroll finishes
+                        setTimeout(() => {
+                            isScrollingFromClick = false;
+                            updateActiveLink();
+                        }, 850);
+                    }
+                });
+            });
+
+            // 4. Image Lightbox Zoom (Click to enlarge / restore)
+            const lightbox = document.createElement('div');
+            lightbox.classList.add('lightbox-overlay');
+            const lightboxImg = document.createElement('img');
+            lightboxImg.classList.add('lightbox-img');
+            lightbox.appendChild(lightboxImg);
+            document.body.appendChild(lightbox);
+
+            const images = document.querySelectorAll('.img-container img');
+            images.forEach(img => {
+                img.addEventListener('click', () => {
+                    lightboxImg.src = img.src;
+                    lightboxImg.alt = img.alt;
+                    lightbox.classList.add('active');
+                });
+            });
+
+            lightbox.addEventListener('click', () => {
+                lightbox.classList.remove('active');
+            });
+        });
+    </script>
+</body>
+
+</html>

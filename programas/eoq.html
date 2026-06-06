@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EOQ Explorer</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --sky-1: #eaf5ff;
+    --sky-2: #d7ebff;
+    --sky-3: #bfdfff;
+    --hangar-ink: #0f2a45;
+    --hangar-muted: #5a6f84;
+    --panel: rgba(255, 255, 255, 0.82);
+    --panel-border: rgba(35, 77, 117, 0.14);
+    --accent: #2f8de3;
+    --accent-soft: #dceeff;
+  }
+
+  body {
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--hangar-ink);
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at 15% 12%, rgba(255,255,255,0.72) 0 12%, transparent 13%),
+      radial-gradient(circle at 78% 22%, rgba(255,255,255,0.55) 0 10%, transparent 11%),
+      linear-gradient(160deg, var(--sky-1) 0%, var(--sky-2) 52%, var(--sky-3) 100%);
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 100vh;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar {
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(238,246,255,0.92));
+    border-right: 1px solid var(--panel-border);
+    padding: 1.35rem;
+    overflow-y: auto;
+    box-shadow: 8px 0 24px rgba(14, 44, 73, 0.06);
+  }
+  .sidebar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--hangar-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    margin-bottom: 1rem;
+  }
+
+  .param-block { margin-bottom: 1.25rem; }
+  .param-label { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .param-name { font-size: 13px; color: #3d5268; }
+  .param-val { font-size: 13px; font-weight: 600; color: #102a45; }
+  .param-unit { font-size: 11px; color: #74899f; margin-left: 2px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 4px; }
+
+  .reset-btn {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 9px 0;
+    background: rgba(255,255,255,0.7);
+    border: 1px solid rgba(31, 92, 145, 0.25);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #30506f;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .reset-btn:hover { background: #eef6ff; transform: translateY(-1px); }
+
+  .divider { border: none; border-top: 1px solid rgba(31, 92, 145, 0.16); margin: 1rem 0; }
+
+  .snapshot-btn {
+    width: 100%;
+    padding: 9px 0;
+    background: linear-gradient(180deg, #3c95e6, #2f80c9);
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #fff;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 8px 18px rgba(37, 109, 168, 0.25);
+    transition: all 0.18s;
+  }
+  .snapshot-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+  .snapshots { margin-top: 1rem; }
+  .snap-item {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12px; color: #4b6076;
+    padding: 6px 8px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: background 0.1s;
+  }
+  .snap-item:hover { background: #edf5fe; border-color: rgba(31, 92, 145, 0.18); }
+  .snap-item.active { background: #deeeff; border-color: #88bbe9; }
+  .snap-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .snap-del { color: #ccc; font-size: 14px; margin-left: 6px; line-height: 1; }
+  .snap-del:hover { color: #e24b4a; }
+  .snap-empty { font-size: 12px; color: #bbb; font-style: italic; text-align: center; padding: 8px 0; }
+
+  .main { padding: 1.5rem; overflow-y: auto; position: relative; }
+  .main::before,
+  .main::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.56);
+    filter: blur(1px);
+    z-index: 0;
+  }
+  .main::before { width: 210px; height: 62px; top: 34px; left: 7%; animation: drift 28s linear infinite; }
+  .main::after { width: 170px; height: 52px; top: 92px; right: 11%; animation: drift 34s linear infinite reverse; }
+  .main > * { position: relative; z-index: 1; }
+
+  .hero {
+    margin-bottom: 1rem;
+    border: 1px solid var(--panel-border);
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    background: linear-gradient(135deg, rgba(255,255,255,0.78), rgba(223,239,255,0.72));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
+    box-shadow: 0 8px 22px rgba(13, 52, 89, 0.08);
+  }
+  .hero-title { font-size: 16px; font-weight: 700; color: #173a5e; }
+  .hero-sub { font-size: 12px; color: #5c7692; margin-top: 2px; }
+  .hero-planes { display: flex; gap: 10px; color: #2f8de3; font-size: 16px; opacity: 0.82; }
+  .plane { display: inline-block; animation: fly 5.5s ease-in-out infinite; }
+  .plane:nth-child(2) { animation-delay: 0.6s; }
+  .plane:nth-child(3) { animation-delay: 1.1s; }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 1.5rem; }
+  .kpi {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 7px 16px rgba(16, 53, 88, 0.06);
+  }
+  .kpi.accent { background: var(--accent-soft); border-color: #8ebde8; }
+  .kpi-label { font-size: 11px; color: #5d7591; margin-bottom: 3px; }
+  .kpi.accent .kpi-label { color: #17558f; }
+  .kpi-val { font-size: 18px; font-weight: 600; color: #1b3a59; }
+  .kpi.accent .kpi-val { color: #0f4a82; }
+  .kpi-unit { font-size: 11px; color: #7991a8; }
+  .kpi.accent .kpi-unit { color: #2f8de3; }
+
+  .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+  .chart-card {
+    background: var(--panel);
+    border-radius: 12px;
+    border: 1px solid var(--panel-border);
+    padding: 1rem 1.25rem;
+    box-shadow: 0 8px 20px rgba(14, 48, 82, 0.06);
+  }
+  .chart-title { font-size: 12px; font-weight: 600; color: #365370; margin-bottom: 0.75rem; }
+  .chart-wrap { position: relative; width: 100%; }
+  .legend-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: 11px; color: #5d7691; }
+  .leg-item { display: flex; align-items: center; gap: 4px; }
+  .leg-sq { width: 8px; height: 8px; border-radius: 2px; }
+
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-label { font-size: 11px; font-weight: 700; color: #5d7691; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 0.75rem; }
+  .compare-table th { text-align: left; padding: 5px 8px; background: #edf5fd; color: #5f7893; font-weight: 600; font-size: 11px; border-bottom: 1px solid rgba(31, 92, 145, 0.12); }
+  .compare-table td { padding: 6px 8px; border-bottom: 1px solid rgba(31, 92, 145, 0.08); color: #2f4a64; }
+  .compare-table tr.current-row td { background: #deedff; color: #0f4a82; font-weight: 600; }
+  .compare-table tr:hover td { background: #f3f8ff; }
+
+  .tab-row { display: flex; gap: 4px; margin-bottom: 1rem; }
+  .tab { padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid transparent; color: #68839d; background: transparent; transition: all 0.15s; }
+  .tab.active { background: #deedff; color: #17558f; border-color: #8ebde8; }
+  .tab:hover:not(.active) { background: #edf5fe; }
+
+  .analysis-section { margin-top: 1.5rem; }
+  .insight-cards { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 0.75rem; }
+  .ins-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 0.75rem; }
+  .ins-title { font-size: 11px; font-weight: 600; color: #5f7893; margin-bottom: 4px; }
+  .ins-val { font-size: 15px; font-weight: 500; }
+  .ins-val.up { color: #3b6d11; }
+  .ins-val.down { color: #a32d2d; }
+  .ins-val.neutral { color: #185fa5; }
+  .ins-desc { font-size: 11px; color: #7a91a7; margin-top: 2px; }
+
+  @keyframes drift {
+    0% { transform: translateX(-10px); }
+    50% { transform: translateX(18px); }
+    100% { transform: translateX(-10px); }
+  }
+  @keyframes fly {
+    0%, 100% { transform: translateY(0) rotate(-8deg); }
+    50% { transform: translateY(-5px) rotate(-14deg); }
+  }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { border-right: none; border-bottom: 0.5px solid rgba(0,0,0,0.12); }
+    .charts-grid { grid-template-columns: 1fr; }
+    .insight-cards { grid-template-columns: 1fr 1fr; }
+    .hero { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="sidebar">
+  <div class="sidebar-title">Parámetros del modelo</div>
+
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Demanda (D)</span><span class="param-val" id="lbl-d">600<span class="param-unit"> ud/año</span></span></div>
+    <input type="range" id="sl-d" min="100" max="2000" step="10" value="600">
+  </div>
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Precio (p)</span><span class="param-val" id="lbl-p">1.200<span class="param-unit"> um/ud</span></span></div>
+    <input type="range" id="sl-p" min="100" max="5000" step="50" value="1200">
+  </div>
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Coste emisión (Cp)</span><span class="param-val" id="lbl-cp">150<span class="param-unit"> um/ord</span></span></div>
+    <input type="range" id="sl-cp" min="10" max="1000" step="10" value="150">
+  </div>
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Coste mantenimiento (Cm)</span><span class="param-val" id="lbl-cm">240<span class="param-unit"> um/ud·año</span></span></div>
+    <input type="range" id="sl-cm" min="10" max="800" step="10" value="240">
+  </div>
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Plazo reaprov. (Pr)</span><span class="param-val" id="lbl-pr">2<span class="param-unit"> sem</span></span></div>
+    <input type="range" id="sl-pr" min="1" max="12" step="1" value="2">
+  </div>
+  <div class="param-block">
+    <div class="param-label"><span class="param-name">Stock de seguridad (SS)</span><span class="param-val" id="lbl-ss">15<span class="param-unit"> ud</span></span></div>
+    <input type="range" id="sl-ss" min="0" max="60" step="1" value="15">
+  </div>
+
+  <button class="reset-btn" id="btn-reset">Restablecer valores base</button>
+
+  <hr class="divider">
+
+  <div class="sidebar-title">Escenarios guardados</div>
+  <button class="snapshot-btn" id="btn-snap">Guardar escenario actual</button>
+  <div class="snapshots" id="snap-list"></div>
+</div>
+
+<div class="main">
+  <div class="hero">
+    <div>
+      <div class="hero-title">EOQ Flight Deck</div>
+      <div class="hero-sub">Panel de control de inventario del hangar</div>
+    </div>
+    <div class="hero-planes" aria-hidden="true">
+      <span class="plane">✈</span>
+      <span class="plane">✈</span>
+      <span class="plane">✈</span>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab active" data-tab="dashboard">Dashboard</button>
+    <button class="tab" data-tab="comparar">Comparar escenarios</button>
+    <button class="tab" data-tab="analisis">Análisis de sensibilidad</button>
+  </div>
+
+  <div id="tab-dashboard">
+    <div class="kpi-grid" id="kpi-grid"></div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Costes EOQ</div>
+        <div class="chart-wrap" style="height:260px;"><canvas id="costChart"></canvas></div>
+        <div class="legend-row">
+          <span class="leg-item"><span class="leg-sq" style="background:#378ADD"></span>CT variable</span>
+          <span class="leg-item"><span class="leg-sq" style="background:#D85A30"></span>Coste emisión</span>
+          <span class="leg-item"><span class="leg-sq" style="background:#1D9E75"></span>Coste mant.</span>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Evolución Temporal EOQ (3 Ciclos)</div>
+        <div class="chart-wrap" style="height:260px;"><canvas id="cycleChart"></canvas></div>
+        <div class="legend-row">
+          <span class="leg-item"><span class="leg-sq" style="background:#378ADD"></span>Stock</span>
+          <span class="leg-item"><span class="leg-sq" style="background:#E24B4A"></span>SS</span>
+          <span class="leg-item"><span class="leg-sq" style="background:#EF9F27"></span>Punto de pedido</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-comparar" style="display:none;">
+    <div class="section-head">
+      <span class="section-label">Comparativa de escenarios</span>
+    </div>
+    <div class="chart-card" style="margin-bottom:1rem;">
+      <div class="chart-title">CT* por escenario</div>
+      <div class="chart-wrap" style="height:220px;"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <table class="compare-table" id="cmp-table">
+        <thead><tr>
+          <th>Escenario</th><th>D</th><th>Cp</th><th>Cm</th><th>SS</th><th>Pr</th><th>Q*</th><th>CT*</th><th>PP</th>
+        </tr></thead>
+        <tbody id="cmp-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="tab-analisis" style="display:none;">
+    <div class="section-head">
+      <span class="section-label">¿Cómo afecta cada parámetro a Q* y CT*?</span>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-title">Q* vs. Demanda (D)</div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="sensD"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Q* vs. Coste emisión (Cp)</div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="sensCp"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Q* vs. Coste mantenimiento (Cm)</div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="sensCm"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">CT* vs. Demanda (D)</div>
+        <div class="chart-wrap" style="height:200px;"><canvas id="sensCtD"></canvas></div>
+      </div>
+    </div>
+    <div class="analysis-section">
+      <div class="section-label" style="margin-bottom:0.75rem;">Elasticidades respecto al escenario actual</div>
+      <div class="insight-cards" id="insight-cards"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const BASE = { d:600, p:1200, cp:150, cm:240, pr:2, ss:15 };
+const SNAP_COLORS = ['#378ADD','#D85A30','#1D9E75','#7F77DD','#EF9F27','#D4537E','#888780'];
+let snapshots = [];
+let charts = {};
+let activeSnap = null;
+
+function calcEOQ(d, p, cp, cm, pr, ss) {
+  const Q = Math.sqrt(2 * d * cp / cm);
+  const ceAno = (d / Q) * cp;
+  const cmAno = (Q / 2) * cm;
+  const CTvar = ceAno + cmAno;
+  const CT = p * d + CTvar;
+  const CU = CT / d;
+  const T = Q / d;
+  const Tsem = T * 50;
+  const freq = 1 / T;
+  const Praño = pr / 50;
+  const PP = Math.round(d * Praño + ss);
+  const SM = Q + ss;
+  return { Q, ceAno, cmAno, CTvar, CT, CU, T, Tsem, freq, Praño, PP, SM };
+}
+
+function getParams() {
+  return {
+    d: +document.getElementById('sl-d').value,
+    p: +document.getElementById('sl-p').value,
+    cp: +document.getElementById('sl-cp').value,
+    cm: +document.getElementById('sl-cm').value,
+    pr: +document.getElementById('sl-pr').value,
+    ss: +document.getElementById('sl-ss').value
+  };
+}
+
+function fmtN(n, dec=2) {
+  if (Math.abs(n) >= 1000) return n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:dec});
+  return n.toLocaleString('es-ES', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+}
+
+function updateLabels(pr) {
+  document.getElementById('lbl-d').innerHTML = fmtN(pr.d,0) + '<span class="param-unit"> ud/año</span>';
+  document.getElementById('lbl-p').innerHTML = fmtN(pr.p,0) + '<span class="param-unit"> um/ud</span>';
+  document.getElementById('lbl-cp').innerHTML = fmtN(pr.cp,0) + '<span class="param-unit"> um/ord</span>';
+  document.getElementById('lbl-cm').innerHTML = fmtN(pr.cm,0) + '<span class="param-unit"> um/ud·año</span>';
+  document.getElementById('lbl-pr').innerHTML = pr.pr + '<span class="param-unit"> sem</span>';
+  document.getElementById('lbl-ss').innerHTML = pr.ss + '<span class="param-unit"> ud</span>';
+}
+
+function updateKPIs(r) {
+  const g = document.getElementById('kpi-grid');
+  const items = [
+    {label:'Q* lote óptimo', val:fmtN(r.Q), unit:'ud/orden', accent:true},
+    {label:'CT* coste total', val:fmtN(r.CT,0), unit:'um/año', accent:true},
+    {label:'Coste unitario CU*', val:fmtN(r.CU), unit:'um/ud', accent:true},
+    {label:'T* ciclo', val:fmtN(r.Tsem), unit:'sem/orden'},
+    {label:'Frecuencia I*', val:fmtN(r.freq), unit:'órd/año'},
+    {label:'Punto de pedido', val:r.PP, unit:'ud'},
+    {label:'Stock máximo', val:fmtN(r.SM), unit:'ud'},
+    {label:'Ce año', val:fmtN(r.ceAno,0), unit:'um/año'},
+    {label:'Cm año', val:fmtN(r.cmAno,0), unit:'um/año'},
+  ];
+  g.innerHTML = items.map(i=>`
+    <div class="kpi${i.accent?' accent':''}">
+      <div class="kpi-label">${i.label}</div>
+      <div class="kpi-val">${i.val}</div>
+      <div class="kpi-unit">${i.unit}</div>
+    </div>`).join('');
+}
+
+function updateCostChart(pr, r) {
+  const qMax = Math.max(r.Q * 3, 60);
+  const labels=[], ce=[], cm=[], ct=[];
+  for(let i=1;i<=80;i++){
+    const q = (qMax/80)*i;
+    const c1 = (pr.d/q)*pr.cp;
+    const c2 = (q/2)*pr.cm;
+    labels.push(+q.toFixed(1));
+    ce.push(+c1.toFixed(1));
+    cm.push(+c2.toFixed(1));
+    ct.push(+(c1+c2).toFixed(1));
+  }
+  if(charts.cost) charts.cost.destroy();
+  charts.cost = new Chart(document.getElementById('costChart'),{
+    type:'line',
+    data:{labels,datasets:[
+      {label:'CT variable',data:ct,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.06)',tension:0.4,pointRadius:0,borderWidth:2,fill:true},
+      {label:'Coste emisión',data:ce,borderColor:'#D85A30',backgroundColor:'transparent',tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[5,3]},
+      {label:'Coste mant.',data:cm,borderColor:'#1D9E75',backgroundColor:'transparent',tension:0.4,pointRadius:0,borderWidth:1.5,borderDash:[5,3]},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:c=>c.dataset.label+': '+fmtN(c.raw,0)+' um'}},
+        annotation:{
+          annotations:{
+            qstar:{type:'line',xMin:r.Q,xMax:r.Q,borderColor:'rgba(55,138,221,0.4)',borderWidth:1.5,borderDash:[3,3],
+              label:{display:true,content:'Q*='+fmtN(r.Q),position:'start',font:{size:11},color:'#378ADD',backgroundColor:'transparent',padding:2}}
+          }
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'Lote Q (ud)',font:{size:11}},ticks:{maxTicksLimit:8,font:{size:11}}},
+        y:{title:{display:true,text:'Coste variable (um/año)',font:{size:11}},ticks:{callback:v=>fmtN(v,0),font:{size:11}}}
+      }
+    }
+  });
+}
+
+function updateCycleChart(pr, r) {
+  const Tsem = r.Tsem, cycles = 3;
+  const ss = pr.ss, yMax = pr.ss + r.Q;
+  const stock = [], ppLine = [], ssLine = [];
+  const pushRef = (t, s) => {
+    const x = +t.toFixed(3);
+    stock.push({ x, y: +s.toFixed(2) });
+    ppLine.push({ x, y: r.PP });
+    ssLine.push({ x, y: ss });
+  };
+  for (let c = 0; c < cycles; c++) {
+    const t0 = c * Tsem;
+    const t1 = (c + 1) * Tsem;
+    if (c === 0) pushRef(t0, yMax);
+    pushRef(t1, ss);
+    pushRef(t1, yMax);
+  }
+  if(charts.cycle) charts.cycle.destroy();
+  charts.cycle = new Chart(document.getElementById('cycleChart'),{
+    type:'line',
+    data:{datasets:[
+      {label:'Stock',data:stock,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',tension:0,pointRadius:0,borderWidth:2,fill:true},
+      {label:'PP',data:ppLine,borderColor:'#EF9F27',backgroundColor:'transparent',pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+      {label:'SS',data:ssLine,borderColor:'#E24B4A',backgroundColor:'transparent',pointRadius:0,borderWidth:1.5,borderDash:[4,3]},
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{
+          title: items => 'Sem ' + fmtN(items[0].parsed.x, 2),
+          label: c => c.dataset.label + ': ' + fmtN(c.parsed.y, 1) + ' ud'
+        }}
+      },
+      scales:{
+        x:{type:'linear',title:{display:true,text:'Tiempo (semanas)',font:{size:11}},ticks:{maxTicksLimit:8,font:{size:11}}},
+        y:{title:{display:true,text:'Stock (ud)',font:{size:11}},min:0,ticks:{font:{size:11}}}
+      }
+    }
+  });
+}
+
+function updateCompare() {
+  const pr = getParams();
+  const rCurr = calcEOQ(pr.d,pr.p,pr.cp,pr.cm,pr.pr,pr.ss);
+  const allScenarios = [
+    {name:'Actual', params:pr, r:rCurr, color:'#378ADD', isCurrent:true},
+    ...snapshots.map(s=>({...s, isCurrent:false}))
+  ];
+
+  if(charts.bar) charts.bar.destroy();
+  charts.bar = new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{
+      labels: allScenarios.map(s=>s.name),
+      datasets:[
+        {label:'CT*',data:allScenarios.map(s=>+s.r.CT.toFixed(0)),backgroundColor:allScenarios.map(s=>s.color+'cc'),borderColor:allScenarios.map(s=>s.color),borderWidth:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>'CT*: '+fmtN(c.raw,0)+' um/año'}}},
+      scales:{x:{ticks:{callback:v=>fmtN(v,0),font:{size:11}}},y:{ticks:{font:{size:11}}}}
+    }
+  });
+
+  const tbody = document.getElementById('cmp-body');
+  tbody.innerHTML = allScenarios.map(s=>`
+    <tr class="${s.isCurrent?'current-row':''}">
+      <td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${s.color};margin-right:6px;"></span>${s.name}</td>
+      <td>${s.params.d}</td><td>${s.params.cp}</td><td>${s.params.cm}</td>
+      <td>${s.params.ss}</td><td>${s.params.pr} sem</td>
+      <td>${fmtN(s.r.Q)}</td><td>${fmtN(s.r.CT,0)}</td><td>${s.r.PP}</td>
+    </tr>`).join('');
+}
+
+function updateSensitivity() {
+  const pr = getParams();
+  const rBase = calcEOQ(pr.d,pr.p,pr.cp,pr.cm,pr.pr,pr.ss);
+
+  function sensChart(id, param, range, label, useQ=true) {
+    const labels=[], data=[];
+    range.forEach(v=>{
+      const pv = {...pr,[param]:v};
+      const r = calcEOQ(pv.d,pv.p,pv.cp,pv.cm,pv.pr,pv.ss);
+      labels.push(v);
+      data.push(+(useQ?r.Q:r.CT).toFixed(2));
+    });
+    const curr = useQ?rBase.Q:rBase.CT;
+    const currIdx = range.findIndex(v=>v===pr[param]);
+    if(charts[id]) charts[id].destroy();
+    charts[id] = new Chart(document.getElementById(id),{
+      type:'line',
+      data:{labels,datasets:[
+        {data,borderColor:'#378ADD',backgroundColor:'rgba(55,138,221,0.07)',tension:0.3,pointRadius:2,pointBackgroundColor:labels.map((v,i)=>i===currIdx?'#378ADD':'transparent'),borderWidth:2,fill:true}
+      ]},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>(useQ?'Q*: ':'CT*: ')+fmtN(c.raw,useQ?2:0)+(useQ?' ud':' um')}}},
+        scales:{
+          x:{title:{display:true,text:label,font:{size:10}},ticks:{maxTicksLimit:6,font:{size:10}}},
+          y:{ticks:{callback:v=>useQ?fmtN(v,0):fmtN(v,0),font:{size:10}}}
+        }
+      }
+    });
+  }
+
+  const dRange = Array.from({length:20},(_,i)=>100+i*100);
+  const cpRange = Array.from({length:20},(_,i)=>10+i*50);
+  const cmRange = Array.from({length:20},(_,i)=>10+i*40);
+
+  sensChart('sensD','d',dRange,'D (ud/año)',true);
+  sensChart('sensCp','cp',cpRange,'Cp (um/ord)',true);
+  sensChart('sensCm','cm',cmRange,'Cm (um/ud·año)',true);
+  sensChart('sensCtD','d',dRange,'D (ud/año)',false);
+
+  const delta = 0.1;
+  const rUp = {
+    d: calcEOQ(pr.d*(1+delta),pr.p,pr.cp,pr.cm,pr.pr,pr.ss),
+    cp: calcEOQ(pr.d,pr.p,pr.cp*(1+delta),pr.cm,pr.pr,pr.ss),
+    cm: calcEOQ(pr.d,pr.p,pr.cp,pr.cm*(1+delta),pr.pr,pr.ss),
+  };
+  function elast(r2, metric) {
+    const base = metric==='Q'?rBase.Q:rBase.CT;
+    const next = metric==='Q'?r2.Q:r2.CT;
+    return ((next-base)/base/delta*100).toFixed(1);
+  }
+  const ins = document.getElementById('insight-cards');
+  const items = [
+    {title:'Elasticidad D → Q*', val:elast(rUp.d,'Q'), desc:'+10% D mueve Q* en este %'},
+    {title:'Elasticidad D → CT*', val:elast(rUp.d,'CT'), desc:'+10% D mueve CT* en este %'},
+    {title:'Elasticidad Cp → Q*', val:elast(rUp.cp,'Q'), desc:'+10% Cp mueve Q* en este %'},
+    {title:'Elasticidad Cp → CT*', val:elast(rUp.cp,'CT'), desc:'+10% Cp mueve CT* en este %'},
+    {title:'Elasticidad Cm → Q*', val:elast(rUp.cm,'Q'), desc:'+10% Cm mueve Q* en este %'},
+    {title:'Elasticidad Cm → CT*', val:elast(rUp.cm,'CT'), desc:'+10% Cm mueve CT* en este %'},
+  ];
+  ins.innerHTML = items.map(i=>{
+    const v = parseFloat(i.val);
+    const cls = v>0?'up':v<0?'down':'neutral';
+    return `<div class="ins-card">
+      <div class="ins-title">${i.title}</div>
+      <div class="ins-val ${cls}">${v>0?'+':''}${i.val}%</div>
+      <div class="ins-desc">${i.desc}</div>
+    </div>`;
+  }).join('');
+}
+
+function update() {
+  const pr = getParams();
+  updateLabels(pr);
+  const r = calcEOQ(pr.d,pr.p,pr.cp,pr.cm,pr.pr,pr.ss);
+  updateKPIs(r);
+  updateCostChart(pr,r);
+  updateCycleChart(pr,r);
+  const activeTab = document.querySelector('.tab.active').dataset.tab;
+  if(activeTab==='comparar') updateCompare();
+  if(activeTab==='analisis') updateSensitivity();
+}
+
+['sl-d','sl-p','sl-cp','sl-cm','sl-pr','sl-ss'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', update);
+});
+
+document.getElementById('btn-reset').addEventListener('click',()=>{
+  document.getElementById('sl-d').value=BASE.d;
+  document.getElementById('sl-p').value=BASE.p;
+  document.getElementById('sl-cp').value=BASE.cp;
+  document.getElementById('sl-cm').value=BASE.cm;
+  document.getElementById('sl-pr').value=BASE.pr;
+  document.getElementById('sl-ss').value=BASE.ss;
+  update();
+});
+
+document.getElementById('btn-snap').addEventListener('click',()=>{
+  const pr = getParams();
+  const r = calcEOQ(pr.d,pr.p,pr.cp,pr.cm,pr.pr,pr.ss);
+  const n = snapshots.length+1;
+  const color = SNAP_COLORS[snapshots.length % SNAP_COLORS.length];
+  snapshots.push({name:'Escenario '+n, params:{...pr}, r, color});
+  renderSnaps();
+  updateCompare();
+});
+
+function renderSnaps() {
+  const el = document.getElementById('snap-list');
+  if(!snapshots.length){el.innerHTML='<div class="snap-empty">Sin escenarios guardados</div>';return;}
+  el.innerHTML = snapshots.map((s,i)=>`
+    <div class="snap-item${activeSnap===i?' active':''}" data-i="${i}">
+      <span class="snap-dot" style="background:${s.color}"></span>
+      <span style="flex:1;margin-left:8px;">${s.name}</span>
+      <span class="snap-del" data-del="${i}">×</span>
+    </div>`).join('');
+  el.querySelectorAll('.snap-item').forEach(el=>{
+    el.addEventListener('click',e=>{
+      if(e.target.dataset.del!==undefined) return;
+      const i = +el.dataset.i;
+      const s = snapshots[i];
+      document.getElementById('sl-d').value=s.params.d;
+      document.getElementById('sl-p').value=s.params.p;
+      document.getElementById('sl-cp').value=s.params.cp;
+      document.getElementById('sl-cm').value=s.params.cm;
+      document.getElementById('sl-pr').value=s.params.pr;
+      document.getElementById('sl-ss').value=s.params.ss;
+      activeSnap=i; renderSnaps(); update();
+    });
+  });
+  el.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      snapshots.splice(+btn.dataset.del,1);
+      if(activeSnap>=snapshots.length) activeSnap=null;
+      renderSnaps(); updateCompare();
+    });
+  });
+}
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    ['dashboard','comparar','analisis'].forEach(id=>{
+      document.getElementById('tab-'+id).style.display = id===tab.dataset.tab?'block':'none';
+    });
+    if(tab.dataset.tab==='comparar') updateCompare();
+    if(tab.dataset.tab==='analisis') updateSensitivity();
+  });
+});
+
+renderSnaps();
+update();
+</script>
+</body>
+</html>
